@@ -1,4 +1,3 @@
 required lib
 
-pecl syck - yaml parsing
 mysql

@@ -10,10 +10,11 @@
 
 namespace ActivePhp;
 
-	require_once '../active_support/base.php';
-	require_once 'exceptions.php';
-	require_once 'result_collection.php';
-
+	require_once(dirname(__FILE__) . '/../active_support/base.php');
+	require_once(dirname(__FILE__) . '/exceptions.php');
+	require_once(dirname(__FILE__) . '/result_collection.php');
+	require_once(dirname(__FILE__) . '/migrations/migration.php');
+	
 	class Base {
 	  protected static $database;
 	  protected static $table;
@@ -274,7 +275,7 @@ namespace ActivePhp;
 		* @param sql String
 		* @param all Boolean - true = multiresults | false = single result
 		*/
-		private static function execute_query($sql, $all = true){
+		public static function execute_query($sql, $all = true){
 			//fetch query cache if it exsists
 			if (isset(self::$query_cache[md5(strtolower($sql))])) {
 				array_push(self::$query_log, "CACHED: $sql");
@@ -282,13 +283,21 @@ namespace ActivePhp;
 			}else{
 				//execute query and set cache pointer
 				array_push(self::$query_log, $sql);
-				$result = mysql_query($sql, self::database());
+				$result = self::execute($sql);
 				$return =  $all ? self::to_objects($result) : self::to_object(mysql_fetch_assoc($result));
 				self::$query_cache[md5(strtolower($sql))] = $return;
 				mysql_free_result($result);
 				return $return;
 			}
 		}
+		
+		
+		
+		public static function execute($sql) {
+			mysql_query($sql, self::database());
+		}
+		
+		
 		/**
 		* Method to_objects
 		* use self::to_objects($result)

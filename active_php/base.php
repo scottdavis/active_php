@@ -3,7 +3,7 @@
 * TODO
 * Add prodected setter support eg. define an array of elements that are not allowed to be set by mass assignment
 * Add readonly support make a column readonly
-* Add createm, update, and other methods that active record has
+* Add create, update, and other methods that active record has
 * Test with phpunit
 */
 
@@ -16,30 +16,45 @@ namespace ActivePhp;
 	require_once(dirname(__FILE__) . '/migrations/migration.php');
 	
 	class Base {
+		
+		/** public vars */
+		public static $query_log = array();
+		
+		/** protected vars */
 	  protected static $database;
 	  protected static $table;
 	  protected static $primary_key_field = 'id';
 	  protected static $associations = array();
-		public static $query_log = array();
 		protected static $query_cache = array();
 		protected static $columns = array();
 		protected static $validations = array();
   
+		/**
+		* Required
+		* connects to the data base and stores the connection
+		* @param $db_settings_name Array
+		*/
 	  public static function establish_connection($db_settings_name) {
 	    $obj_db = mysql_pconnect($db_settings_name['host'], $db_settings_name['username'], $db_settings_name['password']);
 			mysql_select_db($db_settings_name['database'], $obj_db);
 	    static::$database = $obj_db; 
 	  }
-    
+    /**
+		* returns the quoted table name
+	  */
 	  protected static function table_name() {
 			$name = strtolower(isset(static::$table_name) ?: \ActiveSupport\Inflector::pluralize(static::$class));
 	    return "`$name`";
 	  }
-	
+		/**
+		* returns unquoted table name
+		*/
 		public static function real_table_name() {
 			return static::$table_name;
 		}
-  
+		/**
+		* returns name of the primary key field
+		*/
 	  protected static function primary_key_field() {
 	    return static::$primary_key_field;
 	  }
@@ -69,9 +84,8 @@ namespace ActivePhp;
 		*/
 		
 		/**
-		* Method check_args_for_math_function
-		*use self::check_args_for_math_functions($options)
-		* @param options array('column' => 'name', 'conditions' => array('id' => 1))  
+		* use self::check_args_for_math_functions($options)
+		* @param $options array('column' => 'name', 'conditions' => array('id' => 1))  
 		*/
 		protected static function check_args_for_math_functions($options){
 			//verify options contains a column value
@@ -82,7 +96,7 @@ namespace ActivePhp;
 		/**
 		* Method count
 		* use Class::count(array('column' => 'name', 'conditions' => array('id' => 1)))
-		* @param options Array
+		* @param $options Array
 		*/
 		public static function count($options = array('column' => '*', 'conditions' => NULL)) {
 			self::check_args_for_math_functions($options);
@@ -94,7 +108,7 @@ namespace ActivePhp;
 		/**
 		* Method sum
 		* use Class::sum(array('column' => 'name', 'conditions' => array('id' => 1)))
-		* @param options Array
+		* @param $options Array
 		*/
 		public static function sum($options = array('column' => NULL, 'conditions' => NULL)) {
 			self::check_args_for_math_functions($options);
@@ -105,7 +119,7 @@ namespace ActivePhp;
 		/**
 		* Method max
 		* use Class::max(array('column' => 'name', 'conditions' => array('id' => 1)))
-		* @param options Array
+		* @param $options Array
 		*/
 		public static function max($options = array('column' => NULL, 'conditions' => NULL)) {
 			self::check_args_for_math_functions($options);
@@ -116,7 +130,7 @@ namespace ActivePhp;
 		/**
 		* Method min
 		* use Class::min(array('column' => 'name', 'conditions' => array('id' => 1)))
-		* @param options Array
+		* @param $options Array
 		*/
 		public static function min($options = array('column' => NULL, 'conditions' => NULL)) {
 			self::check_args_for_math_functions($options);
@@ -127,7 +141,7 @@ namespace ActivePhp;
 		/**
 		* Method build_conditions
 		* use self::build_conditions(array('name' => 'bob')) or self::build_conditions('id = 3')
-		* @param conditions Array || String
+		* @param $conditions Array || String
 		*/
 		private static function build_conditions($conditions) {
 				$sql = '';
@@ -275,7 +289,7 @@ namespace ActivePhp;
 		* @param sql String
 		* @param all Boolean - true = multiresults | false = single result
 		*/
-		public static function execute_query($sql, $all = true){
+		public static function execute_query($sql, $all = true, $cache = true){
 			//fetch query cache if it exsists
 			if (isset(self::$query_cache[md5(strtolower($sql))])) {
 				array_push(self::$query_log, "CACHED: $sql");
@@ -285,16 +299,30 @@ namespace ActivePhp;
 				array_push(self::$query_log, $sql);
 				$result = self::execute($sql);
 				$return =  $all ? self::to_objects($result) : self::to_object(mysql_fetch_assoc($result));
-				self::$query_cache[md5(strtolower($sql))] = $return;
+				if($cache) {
+					self::$query_cache[md5(strtolower($sql))] = $return;
+				}
 				mysql_free_result($result);
 				return $return;
 			}
 		}
 		
 		
-		
+		/**
+		* executes a single query returns the result object;
+		* @param $sql 
+		*/
 		public static function execute($sql) {
-			mysql_query($sql, self::database());
+			return mysql_query($sql, self::database());
+		}
+		
+		/**
+		* executes a scaler returning a single row
+		* @param $sql 
+		*/
+		public static function select_one($sql) {
+			$result = self::execute($sql);
+			return mysql_fetch_assoc($result);
 		}
 		
 		

@@ -20,6 +20,17 @@
 		public function drop_table($table_name) {
 			return $this->execute('DROP TABLE ' . self::quote_table_name($table_name));
 		}
+		
+		public function remove_column($table_name, $column) {
+			
+		}
+		
+		public function rename_column($table_name, $column_name, $new_column_name) {
+			$column_data = ActivePhp\Base::select_one("SHOW COLUMNS FROM " . self::quote_table_name($table_name) . " LIKE '" . $column_name . "'", false);
+			$current_type = $column_data['Type'];
+			$rename_column_sql = "ALTER TABLE " . self::quote_table_name($table_name) . " CHANGE " . self::quote_column_name($column_name) ." " . self::quote_column_name($new_column_name) . ' ' . $current_type;
+			$this->execute($rename_column_sql);
+		}
 	
 		
 		public function run($down = false) {

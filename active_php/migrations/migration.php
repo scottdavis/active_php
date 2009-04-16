@@ -18,7 +18,7 @@
 		}
 		
 		public function drop_table($table_name) {
-			return $this->execute('DROP TABLE ' . self::quote_table_name($table_name));
+			return $this->execute('DROP TABLE IF EXISTS ' . self::quote_table_name($table_name));
 		}
 		
 		public function remove_column($table_name, $column) {
@@ -43,8 +43,8 @@
 		
 		
 		public function execute($sql) {
-			var_dump($sql);
-			$query = ActivePhp\Base::execute($sql);
+			echo $sql . "\n\n";
+			$query = ActivePhp\Base::execute($sql, true);
 			return $query;
 		}
 		

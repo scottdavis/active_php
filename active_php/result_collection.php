@@ -12,35 +12,35 @@ namespace ActivePhp;
     }
 
 
-		public function to_xml($options = array()) {
-					$klass = $this->array[0]->class_name();
-					$plural = \ActiveSupport\Inflector::pluralize($klass);
-					$xw = new \xmlWriter();
-			    $xw->openMemory();
-			    $xw->startDocument('1.0','UTF-8');
-			    $xw->startElement(strtolower($plural)); 
-					foreach($this->array as $value) {
-						$xw->startElement(strtolower($klass));
-			    	$xw->writeRaw($value->to_xml(false));
-						$xw->endElement();
-					}
-			    $xw->endElement(); 
-			    $xw->endDtd();
-					return $xw->outputMemory(true);
-		}
-		
-		public function __toString() {
-			return '';
-		}
+	public function to_xml($options = array()) {
+		$klass = $this->array[0]->class_name();
+		$plural = \Inflector::pluralize($klass);
+		$xw = new \xmlWriter();
+		$xw->openMemory();
+		$xw->startDocument('1.0','UTF-8');
+		$xw->startElement(strtolower($plural)); 
+			foreach($this->array as $value) {
+				$xw->startElement(strtolower($klass));
+			$xw->writeRaw($value->to_xml(false));
+				$xw->endElement();
+			}
+		$xw->endElement(); 
+		$xw->endDtd();
+		return $xw->outputMemory(true);
+	}
+	
+	public function __toString() {
+		return '';
+	}
 
 
-		public function keys(){
-			return array_keys($this->array);
-		}
-		
-		public function columns(){
-			return $this->keys();
-		}
+	public function keys(){
+		return array_keys($this->array);
+	}
+	
+	public function columns(){
+		return $this->keys();
+	}
 
     public function rewind() {
         reset($this->array);

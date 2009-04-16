@@ -1,7 +1,11 @@
 <?php
-	require_once('inflector.php');
 	class CreateTable {
 	
+	
+		/**
+		*
+		*
+		*/
 		public function __construct($table_name, $options, $migration) {
 			$this->passed_options = $options;
 			$this->migration = $migration;
@@ -61,6 +65,18 @@
 			$this->add_column($column_name, 'text', $options);
 		}
 		
+		public function timestamps() {
+			$this->add_column('created_at', 'datetime');
+			$this->add_column('updated_at', 'datetime');
+		}
+		
+		public function timestamp($column_name, $options = array()) {
+			$this->add_column($column_name, 'datetime', $options);
+		}
+		
+		public function datetime($column_name, $options = array()) {
+			$this->add_column($column_name, 'datetime', $options);
+		}
 		
 		public function references($ref_table, $ref_column = 'id', $options = array('on_update' => 'CASCADE', 'on_delete' => 'CASCADE')) {
 			$column_name = Inflector::singularize($ref_table) . '_' . Inflector::singularize($ref_column);
@@ -68,6 +84,11 @@
 			$this->add_column($column_name, 'integer', array('null' => false));
 			$this->add_index($column_name);
 			$this->add_foreign_key($column_name, $ref_table, $ref_column, $options);
+		}
+		
+		public function belongs_to() {
+			$args = func_get_args();
+			$this->references(join(',', $args));
 		}
 		
 		

@@ -4,7 +4,7 @@ namespace ActiveSupport;
 class DateHelper {
 	
 	public static $formats = array(
-			'db' => 'Y-m-d',
+			'db' => 'Y-m-d G:i:s',
 			'standard' => 'm/d/y',
 			'full' => 'F j, Y, g:i a',
 			'rfc822' => 'd M Y'

@@ -15,6 +15,7 @@ namespace ActivePhp;
 	require_once(dirname(__FILE__) . '/result_collection.php');
 	require_once(dirname(__FILE__) . '/migrations/migration.php');
 	require_once(dirname(__FILE__) . '/errors.php');
+	require_once(dirname(__FILE__) . '/validate.php');
 	
 class Base {
 	
@@ -30,6 +31,7 @@ class Base {
 	protected static $query_cache = array();
 	protected static $columns = array();
 	protected static $validations = array();
+	protected static $my_class;
 
 	var $errors;
 	
@@ -78,6 +80,14 @@ class Base {
 	public function class_name() {
 		return static::$class;
 	}
+	
+	public static function getClass() {
+		if(!isset(static::$my_class) && empty(static::$my_class)) {
+			static::$my_class = new static::$class;
+		}
+		return static::$my_class;
+	}
+	
 
 	private static function sanatize_input_array($input) {
 		if(is_array($input)) {
@@ -180,7 +190,7 @@ class Base {
 	/**
 	* Method find
 	* use self::find(1,2,3,4,5) or self::find(3) or self::find('3')
-	* @param id_or_array Array || String
+	* @param string|integer|array $args
 	*/
 	public static function find() {
 		$array_or_id = func_get_args();
@@ -243,13 +253,47 @@ class Base {
 	*/
 	
 	/**
+	* START VALIDATION CHECKS
+	*/
+	public static function run_validations($klass) {	
+		foreach(get_class_methods(static::$class) as $method) {
+			$matches = array();
+			if(preg_match('/^validators_for_([0-9a-z_]+)/', $method, $matches)) {
+			$columns = explode('_and_', $matches[1]);
+			call_user_func_array(array($klass, $method), array($columns));
+			}
+		}
+	}
+	
+	public static function getErrors($klass) {
+		self::column_validatons($klass);
+		self::run_validations($klass);
+	}
+	
+	
+	public function isValid() {
+		return count($this->errors) == 0 ? true : false; 
+	}
+	
+	
+	/**
+	* END VALIDATION CHECKS
+	*/
+	
+	
+	
+	
+	
+	/**
 	* START CREATE METHODS
 	*/
 	//INSERT INTO `forums` (`name`, `topics_count`, `aasm_state`, `description`, `posts_count`, `position`, `school_id`) VALUES('Jobs', 0, 'active', 'Talk about job postings', 0, 2, 1)
 	
+
 	public static function create($attributes = array()) {
-		self::column_validatons();
-		self::run_validations($attributes);
+		$klass = new static::$class;
+		$klass->row = $attributes;
+		static::getErrors($klass);
 		$attributes = self::update_timestamps(array('created_at', 'updated_at'), $attributes);
 		$sql = 'INSERT INTO ' . self::table_name() ;
 		$keys = array_keys($attributes);
@@ -257,20 +301,20 @@ class Base {
 		$clean = self::sanatize_input_array($values);
 		$keys = self::sanatize_input_array($keys);
 		$sql .= " (`" . join("`, `", $keys) . "`) VALUES ('" .  join("', '", $clean) . "');"; 
-		array_push(self::$query_log, "CREATE: $sql");
-		if(self::execute($sql)) {
-			return self::to_object(array_merge(array('id' => self::insert_id()), $attributes));
+		if(count($klass->errors) == 0 && self::execute($sql)) {
+			array_push(self::$query_log, "CREATE: $sql");
+			$klass->saved = true;
+			return $klass;
 		}else{
-			return false;
+			$klass->saved = false;
+			return $klass;
 		}
 		
 	}
 	
 	public static function _create($attributes = array()) {
 		$create = self::create($attributes);
-		$errors = self::run_validations($attributes);
-		if(!$create){
-			
+		if(!$create->saved){
 			throw new \ActivePhp\ActivePhpException('Failed to create record');
 		}
 		
@@ -304,6 +348,10 @@ class Base {
 	*/
 	
 	public static function update($id, $attributes = array()) {
+		$klass = new static::$class;
+		static::getErrors($klass);
+		$errors = static::getErrors($klass);
+		$klass->errors = array();
 		$sql = 'UPDATE ' . $tbl_name . ' SET ';
 		$updates = array();
 		$attributes = self::update_timestamps(array('updated_at'), $attributes);
@@ -314,18 +362,20 @@ class Base {
 	  		array_push($updates, '`' . self::sanatize_input_array($key) . "` = '" . self::sanatize_input_array($value) . "'");
 		}
 		$sql .= join(", ", $updates) . ' WHERE `id` = ' . self::sanatize_input_array($id);
-		array_push(self::$query_log, "UPDATE: $sql");
-		if(self::execute($sql)) {
-			return self::_find($id);
+		if(count($klass->errors) == 0 && self::execute($sql)) {
+			array_push(self::$query_log, "UPDATE: $sql");
+			$klass->saved = true;
+			return $klass;
 		}else{
-			return false;
+			$klass->saved = false;
+			return $klass;
 		}
 	
 	}
 	
 	public static function _update($id_or_array, $attributes = array()) {
 		$update = self::update($id_or_array, $attributes);
-		if(!$update) {
+		if(!$update->saved) {
 			throw new \ActivePhp\ActivePhpException('Failed to update record');
 		}
 		return $update;
@@ -374,15 +424,13 @@ class Base {
 	* Method column_validations
 	* Builds and array of required columns based on if the column is allowed to be null or not
 	*/
-	private static function column_validatons() {
+	private static function column_validatons($klass) {
 		$columns = self::load_columns();
-		$not_null = array();
 		foreach($columns as $column) {
 			if (strtolower($column['Null']) == 'no' && strtolower($column['Field'] != self::$primary_key_field)){
-				array_push($not_null, $column['Field']);
+				array_push($klass->errors, "{$column['Field']} can not be blank");
 			}
 		}
-		return $not_null;
 	}
 	
 	/**
@@ -452,7 +500,7 @@ class Base {
 	/**
 	* Method to_objects
 	* use self::to_objects($result)
-	* @param result_set_array ResultSet
+	* @param array $result_set_array
 	*/
 	private static function to_objects($result_set_array) {
 		$object_list = array();
@@ -464,7 +512,7 @@ class Base {
   	/**
 	* Method to_object
 	* use self::to_object($result_set)
-	* @param result_set AssocArray
+	* @param array $result_set 
 	*/
   private static function to_object($result_set) {
 		if (empty($result_set)){
@@ -492,7 +540,7 @@ class Base {
 	  protected $row;
   
 	  public function __construct() {
-    
+		$this->errors = array();
 	  }
 		/**
 		* Method __toString
@@ -542,6 +590,14 @@ class Base {
 	return mysql_query($sql, $this->database());
 	}
     
+	
+	public function process_error_return($return) {
+		if(!$return[0]) {
+			array_push($this->errors, array($return[1] => $return[2]));
+		}
+	}
+	
+	
 	public function __get($var) {
 		if(isset($this->row[$var])) {
 			return $this->row[$var];
@@ -559,6 +615,33 @@ class Base {
 		if(in_array($method, self::columns())) {
 			$this->row[$method] = $arguments;
 		}
+		if(preg_match('/^validates_[0-9a-z_]+/', $method, $matches)) {
+			$klass_method = preg_replace('/^validates_/', '', $method);
+			if(in_array($klass_method, get_class_methods('Validate'))) {
+				if(count($arguments[0]) > 1){
+					foreach($arguments[0] as $column) {
+						$args = array('column_name' => $column, 'value' => $this->row[$column]);
+						if(isset($arguments[1]) && !empty($arguments[1])) {
+							$args = array_merge($args, $arguments[1]);
+						}
+						$return = call_user_func_array(array('Validate', $klass_method), array($args));
+						$this->process_error_return($return);
+					}
+				}else{
+					$column = $arguments[0][0];
+					$args = array('column_name' => $column, 'value' => $this->row[$column]);
+					if(isset($arguments[1]) && !empty($arguments[1])) {
+						$args = array_merge($args, $arguments[1]);
+					}
+					$return = call_user_func_array(array('Validate', $klass_method), array($args));
+					$this->process_error_return($return);
+				}
+			}
+		}	
+	}
+	
+	public static function __callStatic($method, $args) {
+
 	}
 
 	/**

@@ -20,19 +20,23 @@
 	
 	
 	
-		public static function acceptance_of($column_name, $value, $message='must be accepted') {
-			 if(!$value) {
-				return self::false_result($column_name, $message);	
+		public static function acceptance_of($args = array('column_name', 'value')) {
+			$defaults = array('message'=> 'must be accepted');
+			$args = array_merge($defaults, $args);
+			 if(!$args['value']) {
+				return self::false_result($args['column_name'], $args['message']);	
             }else{
 				return array(true);
 			}
 		}
 		
 		
-		public static function confirmation_of($column_name, $value1, $value2, $message = "doesn't match confirmation") {	
-            $attribute_confirmation = $attribute_name . '_confirmation';
-            if($value1 !== $value2) {
-				return self::false_result($column_name, $message);
+		public static function confirmation_of($args = array('column_name', 'value1', 'value2')) {	
+            $defaults = array('message' => "doesn't match confirmation");
+			$args = array_merge($defaults, $args);
+			$attribute_confirmation = $args['attribute_name'] . '_confirmation';
+            if($args['value1'] !== $args['value2']) {
+				return self::false_result($args['column_name'], $args['message']);
             }else{
 				return array(true);
 			}
@@ -40,11 +44,14 @@
 		
 		/**
 		 * Validates that attributes are NOT in an array.
-		 * eg. $this->validates_exclusion_of(array(13, 19));
-		 * eg. $this->validates_exclusion_of(range(13, 19));
+		 * eg. $this->validates_exclusion_of($callback, array(13, 19));
+		 * eg. $this->validates_exclusion_of($callback, range(13, 19));
 		 * @see range()
 		 */
-		public static function exclusion_of($column_name, $value, $in = array(), $message = 'is reserved') {				
+		public static function exclusion_of($args = array('column_name', 'value', 'in' => array())) {				
+			$defaults = array('message' => 'is reserved');
+			$args = array_merge($defaults, $args);
+			
 			if(in_array($value, $in)) {
 				return self::false_result($column_name, $message);
 			}else{
@@ -54,13 +61,16 @@
 			
 		/**
 		 * Validates that attributes are in an array.
-		 * eg. $this->validates_inclusion_of(array(13, 19));
-		 * eg. $this->validates_inclusion_of(range(13, 19));
+		 * eg. $this->validates_inclusion_of($callback, array(13, 19));
+		 * eg. $this->validates_inclusion_of($callback, range(13, 19));
 		 * @see range()
 		 */
-		public static function inclusion_of($column_name, $value, $in = array(), $message = 'is not included in the list') {				
-			if(!in_array($value, $in)) {
-				return self::false_result($column_name, $message);
+		public static function inclusion_of($args = array('column_name', 'value', 'in' => array())) {
+var_dump($args);		
+			$defaults = array('message' => 'is not included in the list');
+			$args = array_merge($defaults, $args);
+			if(!in_array($args['value'], $args['in'])) {
+				return self::false_result($args['column_name'], $args['message']);
 			}else{
 				return array(true);
 			}
@@ -68,31 +78,45 @@
 		
 		
 		
-		public static function format_of($column_name, $value, $regex, $message = 'is invalid') {						
-			if(!preg_match($regex, $value)) {
-				return self::false_result($column_name, $message);
+		public static function format_of($args = array('column_name', 'value', 'regex')) {						
+			$defaults = array('message' => 'is invalid');
+			$args = array_merge($defaults, $args);
+			if(!preg_match($args['regex'], $args['value'])) {
+				return self::false_result($args['column_name'], $args['message']);
 			}else{
 				return array(true);
 			}
         }
 		
-		public static function length_of($column_name, $value, $length, $message='is the wrong length') {
-			
-			if(is_array($length)) {
-				if(!in_array(strlen($value)){
-					return self::false_result($column_name, $message);
+		public static function length_of($args = array('column_name', 'value', 'length')) {
+			$defaults = array('message' => 'is the wrong length');
+			$args = array_merge($defaults, $args);	
+			if(is_array($args['length'])) {
+				if(!in_array(strlen($args['value']))){
+					return self::false_result($args['column_name'], $args['message']);
 				}else{
 					return array(true);
 				}
 			}else{
 				(int) $l = $length;
 				if(strlen($value) !== $l){
-					return self::false_result($column_name, $message);
+					return self::false_result($args['column_name'], $args['message']);
 				}else{
 					return array(true);
 				}
 			}
 		
+		}
+		
+		
+		public static function presence_of($args = array('column_name', 'value')) {
+			$defaults = array('message' => "can't be empty");
+			$args = array_merge($defaults, $args);
+			if(empty($args['value'])) {
+				return self::false_result($args['column_name'], $args['message']);
+			}else{
+				return array(true);
+			}
 		}
 		
 		
@@ -106,9 +130,5 @@
 		
     }
 
-    }
-	
-	
-	}
 
 ?>

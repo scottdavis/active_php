@@ -210,6 +210,11 @@ class Base {
 	
 	}
 	
+	public static function delete_all() {
+		$sql = 'DELETE FROM ' . self::table_name() . ';';
+		return self::execute($sql);
+	}
+	
 	
 	private static function build_find_sql($array_or_id) {
 		$all = false;
@@ -245,7 +250,21 @@ class Base {
 		$sql = 'SELECT * from ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
 		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . ';';
+		
 		return self::execute_query($sql, true);
+	}
+	
+	 /**
+	* Method find_by
+	* use self::find_by(array('condtions' => 'name = bob')) or self::find_all()
+	* @param options Array
+	*/
+	public static function find_by($options = array()) {
+		$sql = 'SELECT * from ' . self::table_name() .  
+		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
+		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . ';';
+		
+		return self::execute_query($sql, false);
 	}
 	
 	/**
@@ -303,6 +322,7 @@ class Base {
 		$sql .= " (`" . join("`, `", $keys) . "`) VALUES ('" .  join("', '", $clean) . "');"; 
 		if(count($klass->errors) == 0 && self::execute($sql)) {
 			array_push(self::$query_log, "CREATE: $sql");
+			$klass->row['id'] = static::insert_id();
 			$klass->saved = true;
 			return $klass;
 		}else{
@@ -427,7 +447,7 @@ class Base {
 	private static function column_validatons($klass) {
 		$columns = self::load_columns();
 		foreach($columns as $column) {
-			if (strtolower($column['Null']) == 'no' && strtolower($column['Field'] != self::$primary_key_field)){
+			if (strtolower($column['Null']) == 'no' && strtolower($column['Field'] != self::$primary_key_field) && !preg_match('/_id$/', strtolower($column['Field']))){
 				array_push($klass->errors, "{$column['Field']} can not be blank");
 			}
 		}
@@ -548,8 +568,8 @@ class Base {
 		* returns NULL or record id
 		*/
 		public function __toString(){
-			if (isset($this->row)){
-				return $this->row['id'];
+			if (isset($this->row['id'])){
+				return (string) $this->row['id'];
 			}else{
 				return NULL;
 			}
@@ -611,7 +631,7 @@ class Base {
 	}
 	
 	
-	public function __call($method, $arguments) {
+	public function __call($method, $arguments)  {
 		if(in_array($method, self::columns())) {
 			$this->row[$method] = $arguments;
 		}
@@ -641,7 +661,21 @@ class Base {
 	}
 	
 	public static function __callStatic($method, $args) {
-
+		if(preg_match('/^find_by_([a-z0-9_]+)$/', $method, $matches)) {
+			$method_called = array_shift($matches);
+			$i = 0;
+			$where = array();
+			$cols = preg_match('/_and_/', $matches[0]) ? explode('_and_', $matches[0]) : $matches;
+			foreach($cols as $column) {
+				if(in_array($column, self::columns())) {
+					$col = self::sanatize_input_array($column);
+					$val = self::sanatize_input_array($args[$i]);
+					array_push($where, "$col = '$val'");
+					$i++;
+				}
+			}
+			return static::find_by(array('conditions' => join(' AND ', $where)));
+		}
 	}
 
 	/**

@@ -32,6 +32,7 @@ class Base {
 	protected static $columns = array();
 	protected static $validations = array();
 	protected static $my_class;
+	protected static $table_names = array();
 
 	var $errors;
 	
@@ -49,8 +50,13 @@ class Base {
 	* returns the quoted table name
 	*/
 	protected static function table_name() {
-		$name = strtolower(isset(static::$table_name) ?: \Inflector::pluralize(static::$class));
-	return "`$name`";
+		if(isset(static::$table_names[static::$class]) && !empty(static::$table_names[static::$class])) { 
+			$name = static::$table_names[static::$class];
+		}else{
+			static::$table_names[static::$class] = \Inflector::pluralize(static::$class);
+			$name = static::$table_names[static::$class];
+		}
+		return "`{$name}`";
 	}
 	/**
 	* returns unquoted table name
@@ -98,8 +104,7 @@ class Base {
 		return $clean_values;
 		}else{
 		//if its an int make it a string
-			(string) $string = $input;
-			return mysql_real_escape_string($string);
+			return mysql_real_escape_string((string) $input);
 		}
 	}
 	
@@ -107,6 +112,11 @@ class Base {
 	/**
 	* MATH METHODS
 	*/
+	
+	private static function isInteger($input){
+		return preg_match('@^[-]?[0-9]+$@',$input) === 1;
+	}
+	
 	
 	/**
 	* use self::check_args_for_math_functions($options)
@@ -459,13 +469,7 @@ class Base {
 	* @param $override Boolean - will reload the columns
 	*/
 	private static function columns($override = false) {
-		if (!$override){
-			if (isset(self::$columns) && !empty(self::$columns)) {
-				return self::$columns;
-			}else{
-				self::$columns = self::column_array();
-			}
-		}
+		self::$columns = self::column_array();
 		return self::$columns;
 	}
 
@@ -632,7 +636,7 @@ class Base {
 	
 	
 	public function __call($method, $arguments)  {
-		if(in_array($method, self::columns())) {
+		if(in_array($method, static::load_columns())) {
 			$this->row[$method] = $arguments;
 		}
 		if(preg_match('/^validates_[0-9a-z_]+/', $method, $matches)) {
@@ -662,12 +666,13 @@ class Base {
 	
 	public static function __callStatic($method, $args) {
 		if(preg_match('/^find_by_([a-z0-9_]+)$/', $method, $matches)) {
+
 			$method_called = array_shift($matches);
 			$i = 0;
 			$where = array();
 			$cols = preg_match('/_and_/', $matches[0]) ? explode('_and_', $matches[0]) : $matches;
 			foreach($cols as $column) {
-				if(in_array($column, self::columns())) {
+				if(in_array($column, static::columns())) {
 					$col = self::sanatize_input_array($column);
 					$val = self::sanatize_input_array($args[$i]);
 					array_push($where, "$col = '$val'");

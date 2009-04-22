@@ -138,7 +138,7 @@ class Base {
 		$sql = 'SELECT count(' . $options['column'] . ') AS count_all FROM ' . self::table_name();
 		$sql .= isset($options['conditions']) ? self::build_conditions($options['conditions']) : '';
 		$sql .= ';';
-		return self::execute_query($sql, false)->count_all();
+		return self::execute_query($sql, false)->count_all;
 	}
 	/**
 	* Method sum
@@ -149,7 +149,7 @@ class Base {
 		self::check_args_for_math_functions($options);
 		$sql = 'SELECT sum('. self::table_name() . '.' . $options['column'] . ') as sum_all FROM ' . self::table_name();
 		$sql .= isset($options['conditions']) ? self::build_conditions($options['conditions']) : '';
-		return self::execute_query($sql, false)->sum_all();
+		return self::execute_query($sql, false)->sum_all;
 	}
 	/**
 	* Method max
@@ -160,7 +160,7 @@ class Base {
 		self::check_args_for_math_functions($options);
 		$sql = 'SELECT max('. self::table_name() . '.' . $options['column'] . ') as max_all FROM ' . self::table_name();
 		$sql .= isset($options['conditions']) ? self::build_conditions($options['conditions']) : '';
-		return self::execute_query($sql, false)->max_all();
+		return self::execute_query($sql, false)->max_all;
 	}
 	/**
 	* Method min
@@ -171,7 +171,7 @@ class Base {
 		self::check_args_for_math_functions($options);
 		$sql = 'SELECT min('. self::table_name() . '.' . $options['column'] . ') as min_all FROM ' . self::table_name();
 		$sql .= isset($options['conditions']) ? self::build_conditions($options['conditions']) : '';
-		return self::execute_query($sql, false)->min_all();
+		return self::execute_query($sql, false)->min_all;
 	}
 	/**
 	* Method build_conditions
@@ -257,7 +257,7 @@ class Base {
 	* @param options Array
 	*/
 	public static function find_all($options = array()) {
-		$sql = 'SELECT * from ' . self::table_name() .  
+		$sql = 'SELECT * FROM ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
 		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . ';';
 		
@@ -270,7 +270,7 @@ class Base {
 	* @param options Array
 	*/
 	public static function find_by($options = array()) {
-		$sql = 'SELECT * from ' . self::table_name() .  
+		$sql = 'SELECT * FROM ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
 		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . ';';
 		
@@ -625,10 +625,10 @@ class Base {
 	public function __get($var) {
 		if(isset($this->row[$var])) {
 			return $this->row[$var];
-		} elseif($this->association_has_many_exists($method)) {
-			return $this->association_has_many_find($method);
-		} elseif($this->association_belongs_to_exists($method)) {
-			return $this->association_belongs_to_find($method);
+		} elseif($this->association_has_many_exists($var)) {
+			return $this->association_has_many_find($var);
+		} elseif($this->association_belongs_to_exists($var)) {
+			return $this->association_belongs_to_find($var);
 		} else {
 			throw new \Exception("Property not found in record.");
 		}
@@ -695,7 +695,7 @@ class Base {
 		}else{
 			return false;
 		}
-	}
+	} 
 
 	protected function association_belongs_to_exists($association_name) {
 		$associations = $this->associations();
@@ -721,10 +721,12 @@ class Base {
 	}
 
 	protected function association_has_many_find($association_name) {
+		var_dump($association_name);
 		$primary_key_field = static::primary_key_field();
 		$primary_key_value = mysql_real_escape_string($this->$primary_key_field());
 		$conditions = $this->association_table_name($association_name) . '.' . $this->association_foreign_key($association_name) . ' = ' . $primary_key_value;
 		$association_model = $this->association_model($association_name);
+		var_dump($conditions);
 		$find_array = call_user_func("$association_model::find", 
 		  array('conditions' => $conditions)
 		);
@@ -732,13 +734,11 @@ class Base {
 	}
 
 	protected function association_belongs_to_find($association_name) {
-		$primary_key_field = static::primary_key_field();
+		//$primary_key_field = static::primary_key_field();
 		$primary_key_value = mysql_real_escape_string($this->row[$association_name . '_id']);
-		$conditions = $this->association_table_name($association_name) . '.' . $primary_key_field . ' = ' . $primary_key_value;
+		//$conditions = $this->association_table_name($association_name) . '.' . $primary_key_field . ' = ' . $primary_key_value;
 		$association_model = $this->association_model($association_name);
-		$find_array = call_user_func("$association_model::find", 
-		  array('conditions' => $conditions)
-		);
+		$find_array = call_user_func("$association_model::find", $primary_key_value);
 		return $find_array;
 	}
 

@@ -68,7 +68,7 @@ class Base {
 	* returns name of the primary key field
 	*/
 	protected static function primary_key_field() {
-	return static::$primary_key_field;
+		return static::$primary_key_field;
 	}
 
 	protected static function associations() {
@@ -683,6 +683,19 @@ class Base {
 		}
 	}
 
+	public function is_new_record() {
+		if(isset($this->row) && (count(static::columns()) == count(array_keys($this->row)))) {
+			return true;
+		}else{
+			return false;
+		}
+	}
+	
+	public function is_set($name) {
+		return isset($this->row) && isset($this->row[$name]);
+	}
+	
+	
 	/**
 	* PROTECTED UTILITY METHODS
 	*
@@ -721,25 +734,20 @@ class Base {
 	}
 
 	protected function association_has_many_find($association_name) {
-		var_dump($association_name);
 		$primary_key_field = static::primary_key_field();
-		$primary_key_value = mysql_real_escape_string($this->$primary_key_field());
+		$primary_key_value = mysql_real_escape_string($this->row[$primary_key_field]);
 		$conditions = $this->association_table_name($association_name) . '.' . $this->association_foreign_key($association_name) . ' = ' . $primary_key_value;
 		$association_model = $this->association_model($association_name);
-		var_dump($conditions);
-		$find_array = call_user_func("$association_model::find", 
+		$find_array = call_user_func("$association_model::find_all", 
 		  array('conditions' => $conditions)
 		);
 		return $find_array;
 	}
 
 	protected function association_belongs_to_find($association_name) {
-		//$primary_key_field = static::primary_key_field();
 		$primary_key_value = mysql_real_escape_string($this->row[$association_name . '_id']);
-		//$conditions = $this->association_table_name($association_name) . '.' . $primary_key_field . ' = ' . $primary_key_value;
 		$association_model = $this->association_model($association_name);
-		$find_array = call_user_func("$association_model::find", $primary_key_value);
-		return $find_array;
+		return call_user_func("$association_model::find", $primary_key_value);
 	}
 
 

@@ -33,6 +33,7 @@ class Base {
 	protected static $validations = array();
 	protected static $my_class;
 	protected static $table_names = array();
+	var $saved;
 
 	var $errors;
 	
@@ -620,7 +621,9 @@ class Base {
 			array_push($this->errors, array($return[1] => $return[2]));
 		}
 	}
-	
+	/**
+	* MAGIC METHODS
+	*/
 	
 	public function __get($var) {
 		if(isset($this->row[$var])) {
@@ -635,8 +638,17 @@ class Base {
 	}
 	
 	
+	public function __set($var, $value) {
+		if(in_array($var, static::columns())) {
+			$this->row[$var] = $value;
+		}else{
+			throw new \Exception("Can not set property it does not exsit.");
+		}
+	}
+	
+	
 	public function __call($method, $arguments)  {
-		if(in_array($method, static::load_columns())) {
+		if(in_array($method, static::columns())) {
 			$this->row[$method] = $arguments;
 		}
 		if(preg_match('/^validates_[0-9a-z_]+/', $method, $matches)) {
@@ -683,6 +695,11 @@ class Base {
 		}
 	}
 
+	/**
+	* END MAGIC METHODS
+	*/
+	
+	
 	public function is_new_record() {
 		if(isset($this->row) && (count(static::columns()) == count(array_keys($this->row)))) {
 			return true;

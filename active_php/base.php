@@ -54,7 +54,7 @@ class Base {
 		if(isset(static::$table_names[static::$class]) && !empty(static::$table_names[static::$class])) { 
 			$name = static::$table_names[static::$class];
 		}else{
-			static::$table_names[static::$class] = \Inflector::pluralize(static::$class);
+			static::$table_names[static::$class] = strtolower(\Inflector::pluralize(static::$class));
 			$name = static::$table_names[static::$class];
 		}
 		return "`{$name}`";

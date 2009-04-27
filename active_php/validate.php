@@ -65,8 +65,7 @@
 		 * eg. $this->validates_inclusion_of($callback, range(13, 19));
 		 * @see range()
 		 */
-		public static function inclusion_of($args = array('column_name', 'value', 'in' => array())) {
-var_dump($args);		
+		public static function inclusion_of($args = array('column_name', 'value', 'in' => array())) {	
 			$defaults = array('message' => 'is not included in the list');
 			$args = array_merge($defaults, $args);
 			if(!in_array($args['value'], $args['in'])) {
@@ -108,9 +107,19 @@ var_dump($args);
 		
 		}
 		
+		public static function numercality_of($args = array('column_name', 'value')) {
+			$defaults = array('message' => 'must be an integer');
+			$args = array_merge($defaults, $args);
+			if(is_numeric($args['value']) || empty($args['value'])) {
+				return array(true);
+			}else{
+				return self::false_result($args['column_name'], $args['message']);
+			}
+		}
+		
 		
 		public static function presence_of($args = array('column_name', 'value')) {
-			$defaults = array('message' => "can't be empty");
+			$defaults = array('message' => "can not be blank");
 			$args = array_merge($defaults, $args);
 			if(empty($args['value'])) {
 				return self::false_result($args['column_name'], $args['message']);

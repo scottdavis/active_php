@@ -310,7 +310,22 @@ class Base {
 	* END VALIDATION CHECKS
 	*/
 	
-	
+	/**
+  * Checks weither a record exists or not
+  * @param string $col Column name you wish to check
+  * @param string $value Value you wish to check aginst
+  * @todo add multi conditional support
+  */
+  public static function exists($col, $value) {
+    $sql = 'SELECT 1 from ' . static::table_name() . ' WHERE (`' . static::sanatize_input_array($col) . '`= ' . "'" . static::sanatize_input_array($value) . "') LIMIT 0,1";
+    $result = static::execute($sql);
+    $return = mysql_fetch_assoc($result);
+    if(isset($return['1'])) {
+      return true;
+     }else{
+      return false;
+     }
+  }
 	
 	
 	
@@ -459,7 +474,10 @@ class Base {
 		$columns = self::load_columns();
 		foreach($columns as $column) {
 			if (strtolower($column['Null']) == 'no' && strtolower($column['Field'] != self::$primary_key_field) && !preg_match('/_id$/', strtolower($column['Field']))){
-				array_push($klass->errors, "{$column['Field']} can not be blank");
+					if(empty($klass->row[strtolower($column['Field'])])) {
+						$col = ucwords($column['Field']);
+						array_push($klass->errors, array(strtolower($column['Field']) => "{$col} can not be blank"));
+					}
 			}
 		}
 	}

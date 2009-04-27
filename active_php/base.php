@@ -333,19 +333,20 @@ class Base {
 	* START CREATE METHODS
 	*/
 	//INSERT INTO `forums` (`name`, `topics_count`, `aasm_state`, `description`, `posts_count`, `position`, `school_id`) VALUES('Jobs', 0, 'active', 'Talk about job postings', 0, 2, 1)
-	
+	public function before_create() {}
 
 	public static function create($attributes = array()) {
 		$klass = new static::$class;
-		$klass->row = $attributes;
+		$klass->row = array_merge($klass->row, $attributes);
 		static::getErrors($klass);
-		$attributes = self::update_timestamps(array('created_at', 'updated_at'), $attributes);
+    call_user_func_array(array($klass, 'before_create'), array());
+		$klass->row = self::update_timestamps(array('created_at', 'updated_at'), $klass->row);
 		$sql = 'INSERT INTO ' . self::table_name() ;
-		$keys = array_keys($attributes);
-		$values = array_values($attributes);
+		$keys = array_keys($klass->row);
+		$values = array_values($klass->row);
 		$clean = self::sanatize_input_array($values);
 		$keys = self::sanatize_input_array($keys);
-		$sql .= " (`" . join("`, `", $keys) . "`) VALUES ('" .  join("', '", $clean) . "');"; 
+		$sql .= " (`" . join("`, `", $keys) . "`) VALUES ('" .  join("', '", $clean) . "');";
 		if(count($klass->errors) == 0 && self::execute($sql)) {
 			array_push(self::$query_log, "CREATE: $sql");
 			$klass->row['id'] = static::insert_id();
@@ -398,10 +399,11 @@ class Base {
 		static::getErrors($klass);
 		$errors = static::getErrors($klass);
 		$klass->errors = array();
+    $klass->row = array_merge($klass->row, $attributes);
 		$sql = 'UPDATE ' . $tbl_name . ' SET ';
 		$updates = array();
 		$attributes = self::update_timestamps(array('updated_at'), $attributes);
-		foreach ($attributes as $key => $value) {
+		foreach ($klass->row as $key => $value) {
 			if(empty($value)) {
 				continue;
 			}
@@ -584,6 +586,11 @@ class Base {
   
 	  public function __construct() {
 		$this->errors = array();
+    $this->row = array();
+     // foreach(static::columns() as $col) {
+     //   $this->row[$col] = '';
+     // }
+   // unset($this->row['id']);
 	  }
 		/**
 		* Method __toString

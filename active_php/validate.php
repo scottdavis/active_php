@@ -128,6 +128,17 @@
 			}
 		}
 		
+    
+    public static function uniqueness_of($args = array('column_name', 'value', 'class')) {
+      $defaults = array('message' => ": {$args['value']} already exsists try something else");
+			$args = array_merge($defaults, $args);
+      $fail = call_user_func_array(array($args['class'], 'exists'), array($args['column_name'], $args['value']));
+      if($fail) {
+        return self::false_result($args['column_name'], $args['message']);
+      }else{
+        return array(true);
+      }
+    }
 		
 		
 		

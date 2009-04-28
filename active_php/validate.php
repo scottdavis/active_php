@@ -2,23 +2,6 @@
 
 	class Validate {
 	
-		public $default_error_messages = array(
-			'inclusion' => "is not included in the list",
-			'exclusion' => "is reserved",
-			'invalid' => "is invalid",
-			'confirmation' => "doesn't match confirmation",
-			'accepted ' => "must be accepted",
-			'empty' => "can't be empty",
-			'blank' => "can't be blank",
-			'too_long' => "is too long (max is %d characters)",
-			'too_short' => "is too short (min is %d characters)",
-			'wrong_length' => "is the wrong length (should be %d characters)",
-			'taken' => "has already been taken",
-			'not_a_number' => "is not a number",
-			'not_an_integer' => "is not an integer"
-		);
-	
-	
 	
 		public static function acceptance_of($args = array('column_name', 'value')) {
 			$defaults = array('message'=> 'must be accepted');

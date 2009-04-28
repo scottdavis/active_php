@@ -115,12 +115,12 @@ class Base {
 	*/
 	
 	private static function isInteger($input){
-		return preg_match('@^[-]?[0-9]+$@',$input) === 1;
+		return is_numeric($input);
 	}
 	
 	
 	/**
-	* use self::check_args_for_math_functions($options)
+	* @see self::check_args_for_math_functions($options)
 	* @param $options array('column' => 'name', 'conditions' => array('id' => 1))  
 	*/
 	protected static function check_args_for_math_functions($options){
@@ -396,25 +396,22 @@ class Base {
 	
 	public static function update($id, $attributes = array()) {
 		$klass = new static::$class;
-		static::getErrors($klass);
-		$errors = static::getErrors($klass);
-		$klass->errors = array();
     $klass->row = array_merge($klass->row, $attributes);
-		$sql = 'UPDATE ' . $tbl_name . ' SET ';
+    static::getErrors($klass);
+		$sql = 'UPDATE ' . self::table_name() . ' SET ';
 		$updates = array();
 		$attributes = self::update_timestamps(array('updated_at'), $attributes);
 		foreach ($klass->row as $key => $value) {
-			if(empty($value)) {
-				continue;
-			}
 	  		array_push($updates, '`' . self::sanatize_input_array($key) . "` = '" . self::sanatize_input_array($value) . "'");
 		}
 		$sql .= join(", ", $updates) . ' WHERE `id` = ' . self::sanatize_input_array($id);
 		if(count($klass->errors) == 0 && self::execute($sql)) {
 			array_push(self::$query_log, "UPDATE: $sql");
+      $klass->id = $id;
 			$klass->saved = true;
 			return $klass;
 		}else{
+      $klass->id = $id;
 			$klass->saved = false;
 			return $klass;
 		}
@@ -581,30 +578,26 @@ class Base {
 		return $sql;
 	}
   
-	  /* Instance Methods */
-	  protected $row;
-  
-	  public function __construct() {
-		$this->errors = array();
-    $this->row = array();
-     // foreach(static::columns() as $col) {
-     //   $this->row[$col] = '';
-     // }
-   // unset($this->row['id']);
-	  }
-		/**
-		* Method __toString
-		* @access public
-		* returns NULL or record id
-		*/
-		public function __toString(){
-			if (isset($this->row['id'])){
-				return (string) $this->row['id'];
-			}else{
-				return NULL;
-			}
-		}
-  	/**
+  /* Instance Methods */
+  protected $row;
+
+  public function __construct($args = array()) {
+  $this->errors = array();
+  $this->row = $args;
+  }
+  /**
+  * Method __toString
+  * @access public
+  * returns NULL or record id
+  */
+  public function __toString(){
+    if (isset($this->row['id'])){
+      return (string) $this->row['id'];
+    }else{
+      return NULL;
+    }
+  }
+  /**
 	* Method from_array
 	* @access private
 	* @param $result_set Array
@@ -620,25 +613,28 @@ class Base {
 	*/
 	public function save() {    
 	if(!isset($this->row) || 0 == count($this->row)) {
-	  throw new \Exception("Can't save empty record.");
-	}
-
-	$sql_fields = '';
-	foreach($this->row as $key => $value) {
-	  $value = mysql_real_escape_string($value);
-	  $sql_fields .= $key . ' = ' . $value . ', ';
-	}
-	$sql_fields = substr($sql_fields, 0, strlen($sql_fields) - 2);
-	if(!isset($this->row[static::primary_key_field()])) {
-	  throw new \Exception("Primary key not set for row, cannot save.");
-	}
-	$primary_key_value = $this->row[static::primary_key_field()];
-
-	$sql = 'UPDATE ' . static::table_name() . ' SET ' . $sql_fields . 
-	  ' WHERE ' . static::primary_key_field() . ' = ' . $primary_key_value;
-
-	return mysql_query($sql, $this->database());
-	}
+	  throw new \Exception("Can't an save empty record.");
+    }
+    if($this->is_new_record()) {
+      if($class = static::create($this->row)) {
+        $this->row = $class->row;
+      }else{
+        $this->errors = $class->errors;
+      }
+    }else{
+      if(!isset($this->row[static::primary_key_field()])) {
+        throw new \Exception("Primary key not set for row, cannot save.");
+      }
+      $f = self::primary_key_field();
+      $primary_key_value = $this->row[$f];
+      unset($this->row[$f]);
+      if($class = static::update($primary_key_value, $this->row)) {
+        $this->row = $class->row;
+      }else{
+        $this->errors = $class->errors;
+      }
+    }
+  }
     
 	
 	public function process_error_return($return) {
@@ -681,7 +677,12 @@ class Base {
 			if(in_array($klass_method, get_class_methods('Validate'))) {
 				if(count($arguments[0]) > 1){
 					foreach($arguments[0] as $column) {
-						$args = array('column_name' => $column, 'value' => $this->row[$column]);
+            if(!isset($this->row[$column])) {
+              $value = '';
+            }else{
+              $value = $this->row[$column];
+            }
+						$args = array('column_name' => $column, 'value' => $value);
 						if(isset($arguments[1]) && !empty($arguments[1])) {
 							$args = array_merge($args, $arguments[1]);
 						}

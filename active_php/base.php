@@ -235,10 +235,6 @@ class Base {
   public function destroy() {
     self::delete($this->id);
   }
-  
-   public function delete() {
-    self::delete($this->id);
-  }
 	
 	public static function delete_all() {
 		$sql = 'DELETE FROM ' . self::table_name() . ';';

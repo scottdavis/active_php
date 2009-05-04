@@ -220,6 +220,25 @@ class Base {
 		return self::execute_query($sql, $all, false);
 	
 	}
+  
+  public static function delete($id) {
+    $clean = self::sanatize_input_array($id);
+    if(is_array($id)) {
+      $where = ' WHERE (id IN (' . join(',', $clean) . '))';
+    }else{
+      $where = ' WHERE (id = ' . $clean . ')';
+    }
+    $sql = 'DELETE FROM ' . self::table_name() . $where;
+    return self::execute($sql);
+  }
+  
+  public function destroy() {
+    self::delete($this->id);
+  }
+  
+   public function delete() {
+    self::delete($this->id);
+  }
 	
 	public static function delete_all() {
 		$sql = 'DELETE FROM ' . self::table_name() . ';';

@@ -410,7 +410,7 @@ class Base {
 	*/
 	
 	public static function update($id, $attributes = array()) {
-		$klass = new static::$class;
+		$klass = self::find($id);
     $klass->row = array_merge($klass->row, $attributes);
     static::getErrors($klass);
 		$sql = 'UPDATE ' . self::table_name() . ' SET ';

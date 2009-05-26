@@ -8,6 +8,7 @@ namespace ActivePhp;
     {
         if (is_array($array)) {
             $this->array = $array;
+						$this->length = $this->count();
         }
     }
 
@@ -65,6 +66,14 @@ namespace ActivePhp;
         $array = $this->current() !== false;
         return $array;
     }
+
+		public function count() {
+			return count($this->array);
+		}
+		
+		public function length() {
+			return $this->count();
+		}
 
 		
 	}

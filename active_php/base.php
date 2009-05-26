@@ -33,6 +33,8 @@ class Base {
 	protected static $validations = array();
 	protected static $my_class;
 	protected static $table_names = array();
+	public static $test_mode = false;
+	protected static $temp = array();
 	var $saved;
 
 	var $errors;
@@ -59,6 +61,12 @@ class Base {
 		}
 		return "`{$name}`";
 	}
+	
+	
+	public static function test_mode() {
+		return static::$test_mode;
+	}
+	
 	/**
 	* returns unquoted table name
 	*/
@@ -73,15 +81,15 @@ class Base {
 	}
 
 	protected static function associations() {
-	return static::$associations;
+		return static::$associations;
 	}
 
 	protected static function connection() {
-	return static::$connection;
+		return static::$connection;
 	}
 
-	protected static function database() {
-	return static::$database;
+	public static function database() {
+		return static::$database;
 	}
 	
 	public function class_name() {
@@ -154,7 +162,7 @@ class Base {
 	}
 	/**
 	* Method max
-	* use Class::max(array('column' => 'name', 'conditions' => array('id' => 1)))
+	* @uses Class::max(array('column' => 'name', 'conditions' => array('id' => 1)))
 	* @param $options Array
 	*/
 	public static function max($options = array('column' => NULL, 'conditions' => NULL)) {
@@ -165,7 +173,7 @@ class Base {
 	}
 	/**
 	* Method min
-	* use Class::min(array('column' => 'name', 'conditions' => array('id' => 1)))
+	* @uses Class::min(array('column' => 'name', 'conditions' => array('id' => 1)))
 	* @param $options Array
 	*/
 	public static function min($options = array('column' => NULL, 'conditions' => NULL)) {
@@ -229,7 +237,7 @@ class Base {
       $where = ' WHERE (id = ' . $clean . ')';
     }
     $sql = 'DELETE FROM ' . self::table_name() . $where;
-    return self::execute($sql);
+    return self::execute_insert_query($sql);
   }
   
   public function destroy() {
@@ -238,7 +246,12 @@ class Base {
 	
 	public static function delete_all() {
 		$sql = 'DELETE FROM ' . self::table_name() . ';';
-		return self::execute($sql);
+		return self::execute_insert_query($sql);
+	}
+	
+	public static function truncate() {
+		$sql = 'TRUNCATE ' . self::table_name() . ';';
+		return self::execute_insert_query($sql);
 	}
 	
 	
@@ -275,12 +288,13 @@ class Base {
 	public static function find_all($options = array()) {
 		$sql = 'SELECT * FROM ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
-		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . ';';
+		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . 
+		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') . ';';
 		
 		return self::execute_query($sql, true);
 	}
 	
-	 /**
+	/**
 	* Method find_by
 	* use self::find_by(array('condtions' => 'name = bob')) or self::find_all()
 	* @param options Array
@@ -288,9 +302,23 @@ class Base {
 	public static function find_by($options = array()) {
 		$sql = 'SELECT * FROM ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
-		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . ';';
-		
+		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . 
+		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') . ';';
 		return self::execute_query($sql, false);
+	}
+	
+	/**
+	* Method _find_by
+	* find_by without cache
+	* use self::find_by(array('condtions' => 'name = bob')) or self::find_all()
+	* @param options Array
+	*/
+	public static function _find_by($options = array()) {
+		$sql = 'SELECT * FROM ' . self::table_name() .  
+		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
+		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . 
+		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') . ';';
+		return self::execute_query($sql, false, false);
 	}
 	
 	/**
@@ -347,7 +375,6 @@ class Base {
 	/**
 	* START CREATE METHODS
 	*/
-	//INSERT INTO `forums` (`name`, `topics_count`, `aasm_state`, `description`, `posts_count`, `position`, `school_id`) VALUES('Jobs', 0, 'active', 'Talk about job postings', 0, 2, 1)
 	public function before_create() {}
 
 	public static function create($attributes = array()) {
@@ -362,7 +389,7 @@ class Base {
 		$clean = self::sanatize_input_array($values);
 		$keys = self::sanatize_input_array($keys);
 		$sql .= " (`" . join("`, `", $keys) . "`) VALUES ('" .  join("', '", $clean) . "');";
-		if(count($klass->errors) == 0 && self::execute($sql)) {
+		if(count($klass->errors) == 0 && self::execute_insert_query($sql)) {
 			array_push(self::$query_log, "CREATE: $sql");
 			$klass->row['id'] = static::insert_id();
 			$klass->saved = true;
@@ -385,6 +412,9 @@ class Base {
 	
 	
 	private static function insert_id() {
+		if(static::test_mode()) {
+			return self::max(array('column' => 'id')) + 1;
+		}
 		return mysql_insert_id(static::$connection);
 	}
 	
@@ -420,7 +450,7 @@ class Base {
 	  		array_push($updates, '`' . self::sanatize_input_array($key) . "` = '" . self::sanatize_input_array($value) . "'");
 		}
 		$sql .= join(", ", $updates) . ' WHERE `id` = ' . self::sanatize_input_array($id);
-		if(count($klass->errors) == 0 && self::execute($sql)) {
+		if(count($klass->errors) == 0 && self::execute_insert_query($sql)) {
 			array_push(self::$query_log, "UPDATE: $sql");
       $klass->id = $id;
 			$klass->saved = true;
@@ -519,9 +549,9 @@ class Base {
 			return self::$query_cache[md5(strtolower($sql))];
 		}else{
 			//execute query and set cache pointer
-			array_push(self::$query_log, $sql);
-			$result = self::execute($sql);
-			$return =  $all ? self::to_objects($result) : self::to_object(mysql_fetch_assoc($result));
+			array_push(static::$query_log, $sql);
+			$result = static::execute($sql);
+			$return =  $all ? static::to_objects($result) : static::to_object(mysql_fetch_assoc($result));
 			if($cache) {
 				self::$query_cache[md5(strtolower($sql))] = $return;
 			}
@@ -533,6 +563,32 @@ class Base {
 	}
 	
 	
+	public static function execute_insert_query($sql) {
+		if(static::test_mode()) {
+			static::disable_referential_integrity();
+			static::execute('BEGIN;');
+		}
+		$return = static::execute($sql);
+		if(static::test_mode()) {
+			static::execute('ROLLBACK;');
+			static::disable_referential_integrity(true);
+		}
+		return $return;
+	}
+	
+	
+	
+	public static function disable_referential_integrity($reset=false) {
+		if(!$reset) {
+			$old = static::select_one("SELECT @@FOREIGN_KEY_CHECKS");
+			static::$temp['old_fk'] = reset($old);
+			static::execute("SET FOREIGN_KEY_CHECKS = 0");
+		}else{
+			static::execute("SET FOREIGN_KEY_CHECKS = " . static::$temp['old_fk']);
+			unset(static::$temp['old_fk']);
+		}
+		
+	}
 	/**
 	* executes a single query returns the result object;
 	* @param $sql 
@@ -541,7 +597,10 @@ class Base {
 		if($reset) {
 			mysql_select_db(static::$database, static::connection());
 		}
-		return mysql_query($sql, self::connection());
+		if(static::test_mode()){
+			echo $sql . "\n\n";
+		}
+		return  mysql_query($sql, static::connection());
 	}
 	
 	/**

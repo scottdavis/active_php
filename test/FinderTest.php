@@ -59,7 +59,7 @@ require_once('TestSetup.php');
 		* @expectedException ActivePhp\RecordNotFound
 		*/
 		public function testFindFails() {
-			User::_find(500);
+			User::find(500);
 		}
 		
 		

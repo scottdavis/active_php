@@ -2,6 +2,7 @@
 
 require_once('PHPUnit/Framework.php');
 require_once('TestSetup.php');
+
   /**
   * @package FrameworkTest
 	* @todo add validation tests
@@ -10,6 +11,7 @@ require_once('TestSetup.php');
 	
 		public function setUp() {
 			ActivePhp\Base::$test_mode = true;
+			User::start_transaction();
 		}
 		
 		function testCreateNewUser() {
@@ -24,7 +26,6 @@ require_once('TestSetup.php');
 			$id = $user->id;
 			$this->assertTrue(!empty($id) && is_numeric($id));
 			$this->assertTrue($user->saved);
-			
 			$photo = Photo::_create(array('user_id' => $id, 'title' => 'my photo'));
 			$id = $photo->id;
 			$this->assertTrue(!empty($id) && is_numeric($id));
@@ -45,7 +46,8 @@ require_once('TestSetup.php');
 		}
 		
 		function tearDown() {
-			ActivePhp\Base::$test_mode = true;
+			User::end_transaction();
+			ActivePhp\Base::$test_mode = false;
 		}
 		
 		

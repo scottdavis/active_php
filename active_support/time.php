@@ -1,6 +1,53 @@
 <?php
 namespace ActiveSupport;
 
+
+class Time {
+	
+	public function __construct($time = 0) {
+		if(empty($time)) {
+			$this->time = static::get_current_time();
+		}else{
+			$this->set_time($time);
+		}
+	}
+	
+	public function __toString() {
+		return $this->time;
+	}
+	
+	public function set_time($new_time) {
+		if(is_numeric($new_time)) {
+			$this->time = (integer) $new_time;
+		}else{
+			throw Exception('The time entered is not numeric');
+		}
+	}
+	
+	private static function get_current_time() {
+		return time();
+	}
+	
+	public static function time() {
+		return static::get_current_time(); 
+	}
+	
+	
+	public function __get($format) {
+		if(in_array($format, TimeHelper::$formats)) {
+			return TimeHelper::to_string($format, $this->time);
+		}
+		if(in_array($format, DateHelper::$formats)) {
+			return DateHelper::to_string($format, $this->time);
+		}
+	}
+	
+	
+}
+
+
+
+
 class TimeHelper {
 	
 	public static $formats = array(

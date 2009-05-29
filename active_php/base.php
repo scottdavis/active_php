@@ -412,9 +412,6 @@ class Base {
 	
 	
 	private static function insert_id() {
-		if(static::test_mode()) {
-			return self::max(array('column' => 'id')) + 1;
-		}
 		return mysql_insert_id(static::$connection);
 	}
 	
@@ -563,16 +560,16 @@ class Base {
 	}
 	
 	
+	public static function start_transaction() {
+		static::execute('BEGIN;');
+	}
+	
+	public static function end_transaction() {
+		static::execute('ROLLBACK;');
+	}
+	
 	public static function execute_insert_query($sql) {
-		if(static::test_mode()) {
-			static::disable_referential_integrity();
-			static::execute('BEGIN;');
-		}
 		$return = static::execute($sql);
-		if(static::test_mode()) {
-			static::execute('ROLLBACK;');
-			static::disable_referential_integrity(true);
-		}
 		return $return;
 	}
 	

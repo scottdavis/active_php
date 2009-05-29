@@ -5,6 +5,7 @@
 		public function up() {
 				$table = $this->create_table('users');
 					$table->string('name');
+					$table->integer('my_int');
 					$table->timestamps();
 				$table->go();
 				

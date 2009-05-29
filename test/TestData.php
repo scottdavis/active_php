@@ -5,12 +5,14 @@
 		$users = array('Tim', 'Steve', 'Joe', 'Bob', 'John', 'Scott', 'Randy', 'Jessica', 'Julie');
 		Photo::truncate();
 		User::truncate();
+		ActivePhp\Base::$test_mode = true;
 		foreach($users as $user) {
-			$_user = User::_create(array('name' => $user));
+			$_user = User::_create(array('name' => $user, 'my_int' => null));
 			foreach(range(0,100) as $i) {
 				Photo::_create(array('user_id' =>$_user->id,'title' => 'photo_' . $i));
 			}
 		}
+		ActivePhp\Base::$test_mode = false;
 		if(!defined('HELPERS_LOADED')) {
 			load_helper_functions();
 			define('HELPERS_LOADED', true);

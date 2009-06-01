@@ -386,13 +386,13 @@ class Base {
 		static::getErrors($klass);
     call_user_func_array(array($klass, 'before_create'), array());
 		$klass->row = self::update_timestamps(array('created_at', 'updated_at'), $klass->row);
-		$klass->row = static::prepair_nulls($klass->row);
 		$sql = 'INSERT INTO ' . self::table_name() ;
 		$keys = array_keys($klass->row);
 		$values = array_values($klass->row);
 		$clean = self::sanatize_input_array($values);
 		$keys = self::sanatize_input_array($keys);
-		$sql .= " (`" . join("`, `", $keys) . "`) VALUES ('" .  join("', '", $clean) . "');";
+		$clean = static::prepair_nulls($clean);
+		$sql .= " (`" . join("`, `", $keys) . "`) VALUES (" .  join(", ", $clean) . ");";
 		if(count($klass->errors) == 0 && self::execute_insert_query($sql)) {
 			array_push(self::$query_log, "CREATE: $sql");
 			$klass->row['id'] = static::insert_id();
@@ -451,10 +451,9 @@ class Base {
     static::getErrors($klass);
 		$sql = 'UPDATE ' . self::table_name() . ' SET ';
 		$updates = array();
-		$klass->row = static::prepair_nulls($klass->row);
 		$attributes = self::update_timestamps(array('updated_at'), $attributes);
 		foreach ($klass->row as $key => $value) {
-	  		array_push($updates, '`' . self::sanatize_input_array($key) . "` = '" . self::sanatize_input_array($value) . "'");
+	  		array_push($updates, '`' . self::sanatize_input_array($key) . "` = " . $clean = static::prepair_nulls(self::sanatize_input_array($value)) . "");
 		}
 		$sql .= join(", ", $updates) . ' WHERE `id` = ' . self::sanatize_input_array($id);
 		if(count($klass->errors) == 0 && self::execute_insert_query($sql)) {
@@ -481,9 +480,21 @@ class Base {
 		
 		
 	protected static function prepair_nulls($array) {
-		foreach(array_keys($array) as $key) {
-			if(is_null($array[$key]) || $array[$key] == null) {
-				$array[$key] = 'NULL';
+		if(is_array($array)) {
+			foreach(array_keys($array) as $key) {
+				if(is_null($array[$key]) || $array[$key] == null) {
+					$array[$key] = 'NULL';
+				}else{
+					$v = $array[$key];
+					$array[$key] = "'{$v}'";
+				}
+			}
+		}else{
+			if(is_null($array) || $array == null) {
+				$array = 'NULL';
+			}else{
+				$v = $array;
+				$array = "'{$v}'";
 			}
 		}
 		return $array;
@@ -742,7 +753,9 @@ class Base {
 	public function __get($var) {
 		if(isset($this->row[$var])) {
 			return $this->row[$var];
-		} elseif($this->association_has_many_exists($var)) {
+		} elseif(is_null($this->row[$var]) && in_array($var, static::columns())){
+			return '';
+		}elseif($this->association_has_many_exists($var)) {
 			return $this->association_has_many_find($var);
 		} elseif($this->association_belongs_to_exists($var)) {
 			return $this->association_belongs_to_find($var);

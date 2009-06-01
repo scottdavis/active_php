@@ -50,7 +50,7 @@ require_once('TestSetup.php');
 		//reload joe
 		$joe2 = User::_find($joe->id);
 		//assert that nothing changed
-		$this->assertEquals($joe2->my_int, $joe->my_int);
+		$this->assertTrue(empty($joe2->my_int));
 	}
 	
 	

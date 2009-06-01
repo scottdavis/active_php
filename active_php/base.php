@@ -754,7 +754,7 @@ class Base {
 		if(isset($this->row[$var])) {
 			return $this->row[$var];
 		} elseif(is_null($this->row[$var]) && in_array($var, static::columns())){
-			return '';
+			return null;
 		}elseif($this->association_has_many_exists($var)) {
 			return $this->association_has_many_find($var);
 		} elseif($this->association_belongs_to_exists($var)) {

@@ -28,7 +28,7 @@ require_once('TestSetup.php');
 	
 	
 	public function myIntDataProvider() {
-		return array(array(6),array('6'),array("6"),array('l'));
+		return array(array(6),array('6'),array("6"));
 	}
 	
 	
@@ -38,11 +38,20 @@ require_once('TestSetup.php');
 	public function testCanUpdateUserMyint($int) {
 		$joe = joe();
 		$update = User::update($joe->id, array('my_int' => $int));
-		
 		$this->assertTrue($update->saved);
 		$this->assertEquals($update->my_int, $int);
 	}
 
+
+	public function testCanUpdateUserMyintNonNumeric() {
+		$joe = joe();
+		$update = User::update($joe->id, array('my_int' => 'l'));
+		$this->assertFalse($update->saved);
+		//reload joe
+		$joe2 = User::_find($joe->id);
+		//assert that nothing changed
+		$this->assertEquals($joe2->my_int, $joe->my_int);
+	}
 	
 	
 	

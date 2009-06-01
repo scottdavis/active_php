@@ -1,5 +1,6 @@
 <?php
 	
+	$uSeRs = array();
 
 	function load_test_data() {
 		$users = array('Tim', 'Steve', 'Joe', 'Bob', 'John', 'Scott', 'Randy', 'Jessica', 'Julie');
@@ -7,7 +8,7 @@
 		User::truncate();
 		ActivePhp\Base::$test_mode = true;
 		foreach($users as $user) {
-			$_user = User::_create(array('name' => $user, 'my_int' => null));
+			$_user = User::_create(array('name' => $user, 'my_int' => 1));
 			foreach(range(0,100) as $i) {
 				Photo::_create(array('user_id' =>$_user->id,'title' => 'photo_' . $i));
 			}
@@ -24,7 +25,13 @@
 		$users = array('Tim', 'Steve', 'Joe', 'Bob', 'John', 'Scott', 'Randy', 'Jessica', 'Julie');
 		foreach($users as $user) {
 			$func_name = strtolower($user);
-			$string = "function $func_name() { return User::_find_by(array('conditions' => \"name = '" . $user ."'\"));};";
+			$string = "function $func_name() {
+				global \$uSers;
+				if(!isset(\$uSeRs[$func_name])) {
+					\$uSeRs[$func_name] = User::_find_by(array('conditions' => \"name = '" . $user ."'\"));
+				} 
+				return \$uSeRs[$func_name];
+				}";
 			eval($string);
 		}
 	}

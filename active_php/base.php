@@ -35,8 +35,11 @@ class Base {
 	protected static $table_names = array();
 	public static $test_mode = false;
 	protected static $temp = array();
+	
+	
+	
+	var $update_mode = false;
 	var $saved;
-
 	var $errors;
 	
 	/**
@@ -340,7 +343,7 @@ class Base {
 	
 	public static function getErrors($klass) {
 		self::column_validatons($klass);
-		self::run_validations($klass);
+		self::run_validations($klass, $update);
 	}
 	
 	
@@ -394,7 +397,7 @@ class Base {
 			$klass->row['id'] = static::insert_id();
 			$klass->saved = true;
 			return $klass;
-		}else{
+		}else{	
 			$klass->saved = false;
 			return $klass;
 		}
@@ -403,6 +406,9 @@ class Base {
 	
 	public static function _create($attributes = array()) {
 		$create = self::create($attributes);
+		if(count($create->errors)) {
+			throw new \ActivePhp\ActivePhpException(join("\n", $create->errors[0]));
+		}
 		if(!$create->saved){
 			throw new \ActivePhp\ActivePhpException('Failed to create record');
 		}
@@ -437,7 +443,9 @@ class Base {
 	*/
 	
 	public static function update($id, $attributes = array()) {
-		$klass = self::find($id);
+		$klass = self::_find($id);
+		$old_row = $klass->row;
+		$klass->update_mode = true;
     $klass->row = array_merge($klass->row, $attributes);
     static::getErrors($klass);
 		$sql = 'UPDATE ' . self::table_name() . ' SET ';
@@ -451,10 +459,11 @@ class Base {
 			array_push(self::$query_log, "UPDATE: $sql");
       $klass->id = $id;
 			$klass->saved = true;
+			$klass->update_mode = false;
 			return $klass;
 		}else{
-      $klass->id = $id;
 			$klass->saved = false;
+			$klass->update_mode = false;
 			return $klass;
 		}
 	
@@ -743,6 +752,13 @@ class Base {
 		if(in_array($method, static::columns())) {
 			$this->row[$method] = $arguments;
 		}
+		/**This is a special case because we do not want uniqueness_of being called on an update
+		 * sice it already exsists... because we are updating it!
+		 */
+		if($this->update_mode && preg_match('/uniqueness_of/', $method)) {
+			return;
+		}
+		
 		if(preg_match('/^validates_[0-9a-z_]+/', $method, $matches)) {
 			$klass_method = preg_replace('/^validates_/', '', $method);
 			if(in_array($klass_method, get_class_methods('Validate'))) {

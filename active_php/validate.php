@@ -35,7 +35,7 @@
 			$defaults = array('message' => 'is reserved');
 			$args = array_merge($defaults, $args);
 			
-			if(in_array($value, $in)) {
+			if(in_array($args['value'], $args['in'])) {
 				return self::false_result($column_name, $message);
 			}else{
 				return array(true);

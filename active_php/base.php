@@ -386,6 +386,7 @@ class Base {
 		static::getErrors($klass);
     call_user_func_array(array($klass, 'before_create'), array());
 		$klass->row = self::update_timestamps(array('created_at', 'updated_at'), $klass->row);
+		$klass->row = static::prepair_nulls($klass->row);
 		$sql = 'INSERT INTO ' . self::table_name() ;
 		$keys = array_keys($klass->row);
 		$values = array_values($klass->row);
@@ -450,6 +451,7 @@ class Base {
     static::getErrors($klass);
 		$sql = 'UPDATE ' . self::table_name() . ' SET ';
 		$updates = array();
+		$klass->row = static::prepair_nulls($klass->row);
 		$attributes = self::update_timestamps(array('updated_at'), $attributes);
 		foreach ($klass->row as $key => $value) {
 	  		array_push($updates, '`' . self::sanatize_input_array($key) . "` = '" . self::sanatize_input_array($value) . "'");
@@ -476,6 +478,17 @@ class Base {
 		}
 		return $update;
 	}
+		
+		
+	protected static function prepair_nulls($array) {
+		foreach(array_keys($array) as $key) {
+			if(is_null($array[$key]) || $array[$key] == null) {
+				$array[$key] = 'NULL';
+			}
+		}
+		return $array;
+	}	
+		
 		
 	/**
 	* END UPDATE METODS

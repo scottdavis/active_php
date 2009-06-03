@@ -917,7 +917,7 @@ class Base {
 		$singular = \Inflector::singularize($association_name);
 		$polymorphic_column_type = $singular . 'able_type';
 		$polymorphic_column_id =  $singular . 'able_id';
-		$class = get_class_anme($this);
+		$class = strtolower(get_class($this));
 		$conditions = $polymorphic_column_type . " = '$class' AND " . $polymorphic_column_id . " = '{$this->id}'";
 		return call_user_func("$association_model::find_all", array('conditions' => $conditions));
 	}

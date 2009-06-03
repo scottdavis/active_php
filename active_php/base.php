@@ -757,6 +757,8 @@ class Base {
 			return null;
 		}elseif($this->association_has_many_exists($var)) {
 			return $this->association_has_many_find($var);
+		}elseif($this->association_has_many_polymorphic_exists($var)) {
+			return $this->association_has_many_polymorphic_find($var);
 		} elseif($this->association_belongs_to_exists($var)) {
 			return $this->association_belongs_to_find($var);
 		} else {
@@ -864,6 +866,15 @@ class Base {
 		}else{
 			return false;
 		}
+	}
+	
+	protected function association_has_many_polymorphic_exists($association_name) {
+		$associations = $this->associations();
+		if (isset($associations['has_many_polymorphic'])){
+			return isset($associations['has_many_polymorphic'][$association_name]) || in_array($association_name, $associations['has_many_polymorphic']);
+		}else{
+			return false;
+		}
 	} 
 
 	protected function association_belongs_to_exists($association_name) {
@@ -886,7 +897,7 @@ class Base {
 	}
 
 	protected function association_model($association_name) {
-		return ucwords(\Inflector::singularize($association_name));
+		return \Inflector::classify($association_name);
 	}
 
 	protected function association_has_many_find($association_name) {
@@ -898,6 +909,17 @@ class Base {
 		  array('conditions' => $conditions)
 		);
 		return $find_array;
+	}
+	
+	
+	protected function association_has_many_polymorphic_find($association_name) {
+		$association_model = $this->association_model($association_name);
+		$singular = Inflector::singluarize($association_name);
+		$polymorphic_column_type = $singular . 'able_type';
+		$polymorphic_column_id =  $singular . 'able_id';
+		$class = get_class_anme($this);
+		$conditions = $polymorphic_column_type . " = '$class' AND " . $polymorphic_column_id . " = '{$this->id}'";
+		return call_user_func("$association_model::find_all", array('conditions' => $conditions));
 	}
 
 	protected function association_belongs_to_find($association_name) {

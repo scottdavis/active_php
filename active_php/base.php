@@ -914,7 +914,7 @@ class Base {
 	
 	protected function association_has_many_polymorphic_find($association_name) {
 		$association_model = $this->association_model($association_name);
-		$singular = \Inflector::singluarize($association_name);
+		$singular = \Inflector::singularize($association_name);
 		$polymorphic_column_type = $singular . 'able_type';
 		$polymorphic_column_id =  $singular . 'able_id';
 		$class = get_class_anme($this);

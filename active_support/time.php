@@ -110,7 +110,7 @@ class TimeHelper {
 		}
 		
 		# Like distance_of_time_in_words, but where <tt>to_time</tt> is fixed to <tt>Time.now</tt>.
-		public function time_ago_in_words($from_time, $include_seconds = false)
+		public static function time_ago_in_words($from_time, $include_seconds = false)
 		{
 		  return static::distance_of_time_in_words($from_time, time(), $include_seconds);
 		}

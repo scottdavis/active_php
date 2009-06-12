@@ -331,6 +331,13 @@ class Base {
 	/**
 	* START VALIDATION CHECKS
 	*/
+	
+	
+	/** Validation Callbacks */
+	
+	public function before_validation() {}
+	public function after_validation() {}
+	
 	public static function run_validations($klass) {	
 		foreach(get_class_methods(static::$class) as $method) {
 			$matches = array();
@@ -342,12 +349,17 @@ class Base {
 	}
 	
 	public static function getErrors($klass) {
+		call_user_func_array(array($klass, 'before_validation'), array());
+		/** Run default mysql validations based on column types */
 		self::column_validatons($klass);
+		/** run customn user made validations */
 		self::run_validations($klass, $update);
+		call_user_func_array(array($klass, 'after_validation'), array());
 	}
 	
 	
 	public function isValid() {
+		static::getErrors($this);
 		return count($this->errors) == 0 ? true : false; 
 	}
 	
@@ -378,8 +390,11 @@ class Base {
 	/**
 	* START CREATE METHODS
 	*/
+	
+	/** Create Callbacks*/
 	public function before_create() {}
-
+	public function after_create()  {}
+	
 	public static function create($attributes = array()) {
 		$klass = new static::$class;
 		$klass->row = array_merge($klass->row, $attributes);
@@ -397,6 +412,7 @@ class Base {
 			array_push(self::$query_log, "CREATE: $sql");
 			$klass->row['id'] = static::insert_id();
 			$klass->saved = true;
+			call_user_func_array(array($klass, 'after_create'), array());
 			return $klass;
 		}else{	
 			$klass->saved = false;
@@ -443,12 +459,17 @@ class Base {
 	* START UPDATE METHODS
 	*/
 	
+	//Update callbacks
+	public function before_update() {}
+	public function after_update() {}
+	
 	public static function update($id, $attributes = array()) {
 		$klass = self::_find($id);
 		$old_row = $klass->row;
 		$klass->update_mode = true;
     $klass->row = array_merge($klass->row, $attributes);
     static::getErrors($klass);
+    call_user_func_array(array($klass, 'before_update'), array());
 		$sql = 'UPDATE ' . self::table_name() . ' SET ';
 		$updates = array();
 		$attributes = self::update_timestamps(array('updated_at'), $attributes);
@@ -461,6 +482,7 @@ class Base {
       $klass->id = $id;
 			$klass->saved = true;
 			$klass->update_mode = false;
+			call_user_func_array(array($klass, 'after_update'), array());
 			return $klass;
 		}else{
 			$klass->saved = false;

@@ -291,8 +291,8 @@ class Base {
 	public static function find_all($options = array()) {
 		$sql = 'SELECT * FROM ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
-		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . 
-		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') . ';';
+		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') . 
+		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . ';';
 		
 		return self::execute_query($sql, true);
 	}
@@ -305,8 +305,8 @@ class Base {
 	public static function find_by($options = array()) {
 		$sql = 'SELECT * FROM ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
-		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . 
-		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') . ';';
+		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') .
+		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') .  ';';
 		return self::execute_query($sql, false);
 	}
 	
@@ -319,8 +319,8 @@ class Base {
 	public static function _find_by($options = array()) {
 		$sql = 'SELECT * FROM ' . self::table_name() .  
 		(isset($options['conditions'])  ? ' WHERE ' . $options['conditions']  : '') . 
-		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') . 
-		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') . ';';
+		(isset($options['order'])       ? ' ORDER BY ' . $options['order']      : '') .
+		(isset($options['limit'])       ? ' LIMIT ' . $options['limit']       : '') .  ';';
 		return self::execute_query($sql, false, false);
 	}
 	
@@ -810,7 +810,7 @@ class Base {
 		}
 		
 		if(preg_match('/^validates_[0-9a-z_]+/', $method, $matches)) {
-			$klass_method = preg_replace('/^validates_/', '', $method);
+			$klass_method = str_replace('validates_', '', $method);
 			if(in_array($klass_method, get_class_methods('Validate'))) {
 				if(count($arguments[0]) > 1){
 					foreach($arguments[0] as $column) {

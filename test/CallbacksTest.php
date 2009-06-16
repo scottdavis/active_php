@@ -8,6 +8,7 @@ require_once('TestSetup.php');
 	
 		public function setUp() {
 			ActivePhp\Base::$test_mode = true;
+			User::start_transaction();
 			User::$callback_tests = array();
 		}
 	
@@ -27,7 +28,10 @@ require_once('TestSetup.php');
 			$this->assertTrue(User::$callback_tests['after_validation']);
 		}
 		
-		
+		public function tearDown() {
+			User::end_transaction();
+			ActivePhp\Base::$test_mode = flase;
+		}
 		
 		
 	}

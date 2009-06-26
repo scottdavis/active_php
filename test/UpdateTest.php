@@ -57,7 +57,7 @@ require_once('TestSetup.php');
 	
 	public function tearDown() {
 		User::end_transaction();
-		ActivePhp\Base::$test_mode = flase;
+		ActivePhp\Base::$test_mode = false;
 	}
 	
 	

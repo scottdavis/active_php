@@ -709,7 +709,10 @@ class Base {
 
   public function __construct($args = array()) {
   $this->errors = array();
-  $this->row = $args;
+	foreach(static::columns() as $col) {
+		$this->row[$col] = NULL;
+	}
+  $this->row = array_merge($this->row, $args);
   }
   /**
   * Method __toString

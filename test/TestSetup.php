@@ -53,4 +53,14 @@ define('DATABASE_HOST', 'localhost');
 	
 	load_test_data();
 
+
+	foreach(array('Tim', 'Steve', 'Joe', 'Bob', 'John', 'Scott', 'Randy', 'Jessica', 'Julie') as $user) {
+		$func_name = strtolower($user);
+		$func = "function $func_name() {
+			return User::_find_by(array('conditions' => \"name = '" . $user . "'\"));
+		};";
+		eval($func);
+	}
+
+
 ?>

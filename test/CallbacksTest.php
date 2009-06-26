@@ -1,6 +1,8 @@
 <?php
 require_once('PHPUnit/Framework.php');
 require_once('TestSetup.php');
+
+
   /**
   * @package FrameworkTest
   */
@@ -30,7 +32,7 @@ require_once('TestSetup.php');
 		
 		public function tearDown() {
 			User::end_transaction();
-			ActivePhp\Base::$test_mode = flase;
+			ActivePhp\Base::$test_mode = false;
 		}
 		
 		

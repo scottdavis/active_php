@@ -123,7 +123,26 @@
         	return preg_replace('/\./', '`.`', self::quote_column_name($name));
 		}
 		
+		public static function columns($table) {
+			$sql = 'SHOW COLUMNS FROM ' . static::quote_table_name($table);
+			$result = ActivePhp\Base::execute($sql, true);
+			$output = array();
+			while($row = mysql_fetch_assoc($result)) {
+				array_push($output, $row);
+			}
+			return $output;
+		}
 		
+		
+		public static function columns_data($table, $column) {
+			$columns = static::columns($table);
+			foreach($columns as $_column) {
+				if(strtolower($_column['Field']) == strtolower($column)) {
+					return $_column;
+				}
+			}
+			throw new Exception("No Column Found");
+		}
 		
 		
 	}

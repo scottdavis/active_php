@@ -1,5 +1,6 @@
 <?php
 	require_once(dirname(__FILE__) . '/lib/create_table.php');
+	require_once(dirname(__FILE__) . '/lib/alter_table.php');
 	require_once(dirname(__FILE__) . '/../base.php');
 	class Migration {
 	
@@ -15,6 +16,10 @@
 		
 		public function create_table($table_name, $options = array()) {
 			return new CreateTable($table_name, $options, $this);
+		}
+		
+		public function alter_table($table_name, $options = array()) {
+			return new AlterTable($table_name, $options, $this);
 		}
 		
 		public function drop_table($table_name) {

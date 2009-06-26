@@ -353,7 +353,7 @@ class Base {
 		/** Run default mysql validations based on column types */
 		self::column_validatons($klass);
 		/** run customn user made validations */
-		self::run_validations($klass, $update);
+		self::run_validations($klass);
 		call_user_func_array(array($klass, 'after_validation'), array());
 	}
 	

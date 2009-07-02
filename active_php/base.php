@@ -848,7 +848,7 @@ class Base {
 			$method_called = array_shift($matches);
 			$i = 0;
 			$where = array();
-			$cols = preg_match('/_and_/', $matches[0]) ? explode('_and_', $matches[0]) : $matches;
+			$cols = isset($matches[0]) ? explode('_and_', $matches[0]) : $matches;
 			foreach($cols as $column) {
 				if(in_array($column, static::columns())) {
 					$col = self::sanatize_input_array($column);

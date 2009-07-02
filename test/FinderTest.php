@@ -52,6 +52,17 @@ require_once('TestSetup.php');
 			}
 		}
 		
+		public function testFindByName() {
+			$user = User::find_by_name('joe');
+			$this->assertEquals('joe', strtolower($user->name));
+		}
+		
+		public function testFindByWithAnd() {
+			$user = User::find_by_name('joe');
+			$photo = Photo::find_by_user_id_and_title($user->id, 'photo_0');
+			$this->assertEquals($photo->user_id, $user->id);
+		}
+		
 		
 		
 		

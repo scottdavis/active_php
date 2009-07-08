@@ -1,6 +1,6 @@
 <?php
 class Photo extends ActivePhp\Base {
-	protected static $class = __CLASS__;
+	public static $class = __CLASS__;
 	public static $associations = array('belongs_to' => array('user'));
 	
 	public function validators_for_user_id_and_title($col) {
@@ -8,7 +8,7 @@ class Photo extends ActivePhp\Base {
 	}
 	
 	public function validators_for_user_id($col) {
-		$this->validates_inclusion_of($col, array('in' => range(0, 12)));
+		$this->validates_inclusion_of($col, array('in' => range(0, 13)));
 	}
 	
 }

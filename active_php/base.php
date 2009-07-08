@@ -16,6 +16,8 @@ namespace ActivePhp;
 	require_once(dirname(__FILE__) . '/migrations/migration.php');
 	require_once(dirname(__FILE__) . '/errors.php');
 	require_once(dirname(__FILE__) . '/validate.php');
+	require_once(dirname(__FILE__) . '/adapters/abstract_adapter.php');
+	
 	
 class Base {
 	
@@ -34,8 +36,9 @@ class Base {
 	protected static $my_class;
 	protected static $table_names = array();
 	public static $test_mode = false;
+	public static $adapter = NULL;
 	protected static $temp = array();
-	
+	public static $class;
 	
 	
 	var $update_mode = false;
@@ -48,9 +51,11 @@ class Base {
 	* @param $db_settings_name Array
 	*/
 	public static function establish_connection($db_settings_name) {
-	static::$connection = mysql_connect($db_settings_name['host'], $db_settings_name['username'], $db_settings_name['password']);
-	static::$database = $db_settings_name['database'];
-	mysql_select_db(static::$database, static::connection());
+		$file = strtolower($db_settings_name['adapter']) . '_adapter';
+		$class = "\\ActivePhp\\" . \Inflector::classify($file);
+		$klass = new $class($db_settings_name);
+		static::$adapter = $klass;
+
 	}
     /**
 	* returns the quoted table name
@@ -65,6 +70,10 @@ class Base {
 		return "`{$name}`";
 	}
 	
+	
+	public static function adapter() {
+		return static::$adapter;
+	}
 	
 	public static function test_mode() {
 		return static::$test_mode;
@@ -89,6 +98,10 @@ class Base {
 
 	protected static function connection() {
 		return static::$connection;
+	}
+	
+	public static function set_connection($conn) {
+		static::$connection = $conn;
 	}
 
 	public static function database() {
@@ -198,6 +211,27 @@ class Base {
 				$sql .= ' WHERE(' . $conditions . ')';
 			}
 			return $sql;
+	}
+	
+	
+	private static function build_join($join) {
+		
+	}
+	
+	private static function build_include($include) {
+		
+	}
+	
+	private static function build_group_by($group_by) {
+		
+	}
+	
+	private static function build_order($order) {
+		
+	}
+	
+	private static function build_limit($limit) {
+		
 	}
 	
 	
@@ -377,7 +411,7 @@ class Base {
   public static function exists($col, $value) {
     $sql = 'SELECT 1 from ' . static::table_name() . ' WHERE (`' . static::sanatize_input_array($col) . '`= ' . "'" . static::sanatize_input_array($value) . "') LIMIT 0,1";
     $result = static::execute($sql);
-    $return = mysql_fetch_assoc($result);
+    $return = $result->fetch_assoc();
     if(isset($return['1'])) {
       return true;
      }else{
@@ -435,7 +469,7 @@ class Base {
 	
 	
 	private static function insert_id() {
-		return mysql_insert_id(static::$connection);
+		return static::$adapter->insert_id();
 	}
 	
 	
@@ -540,10 +574,10 @@ class Base {
 			array_push(self::$query_log, "CACHED: $sql");
 			return self::$query_cache[md5(strtolower($sql))];
 		}else{
-			$result = mysql_query($sql, self::connection());
+			$result = static::$adapter->query($sql);
 			array_push(self::$query_log, $sql);
 			$output = array();
-			while($row = mysql_fetch_assoc($result)) {
+			while($row = $result->fetch_assoc()) {
 				array_push($output, $row);
 			}
 			self::$query_cache[md5(strtolower($sql))] = $output;
@@ -603,12 +637,12 @@ class Base {
 			//execute query and set cache pointer
 			array_push(static::$query_log, $sql);
 			$result = static::execute($sql);
-			$return =  $all ? static::to_objects($result) : static::to_object(mysql_fetch_assoc($result));
+			$return =  $all ? static::to_objects($result) : static::to_object($result->fetch_assoc());
 			if($cache) {
 				self::$query_cache[md5(strtolower($sql))] = $return;
 			}
 			if($result) {
-				mysql_free_result($result);
+				$result->free();
 			}
 			return $return;
 		}
@@ -647,12 +681,12 @@ class Base {
 	*/
 	public static function execute($sql, $reset=false) {
 		if($reset) {
-			mysql_select_db(static::$database, static::connection());
+			static::$adapter->reset();
 		}
 		if(static::test_mode()){
 			echo $sql . "\n\n";
 		}
-		return  mysql_query($sql, static::connection());
+		return static::$adapter->query($sql);
 	}
 	
 	/**
@@ -661,7 +695,7 @@ class Base {
 	*/
 	public static function select_one($sql) {
 		$result = self::execute($sql);
-		return mysql_fetch_assoc($result);
+		return $result->fetch_assoc();
 	}
 	
 	
@@ -672,7 +706,7 @@ class Base {
 	*/
 	private static function to_objects($result_set_array) {
 		$object_list = array();
-		while($result_set = mysql_fetch_assoc($result_set_array)) {
+		while($result_set = $result_set_array->fetch_assoc()) {
 		  array_push($object_list, self::to_object($result_set));
 		}
 		return new ResultCollection($object_list);
@@ -874,7 +908,7 @@ class Base {
 		}
 	}
 	
-	public function is_set($name) {
+	public function __isset($name) {
 		return isset($this->row) && isset($this->row[$name]);
 	}
 	

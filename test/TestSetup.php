@@ -31,7 +31,8 @@ define('DATABASE_HOST', 'localhost');
 	  'host' => DATABASE_HOST,
 	  'database' => MYSQL_DATABASE,
 	  'username' => 'root',
-	  'password' => ''
+	  'password' => '',
+		'adapter' => 'mysql'
 	));
 
 	//load the test database
@@ -53,7 +54,6 @@ define('DATABASE_HOST', 'localhost');
 	
 	load_test_data();
 
-
 	foreach(array('Tim', 'Steve', 'Joe', 'Bob', 'John', 'Scott', 'Randy', 'Jessica', 'Julie') as $user) {
 		$func_name = strtolower($user);
 		$func = "function $func_name() {
@@ -61,6 +61,7 @@ define('DATABASE_HOST', 'localhost');
 		};";
 		eval($func);
 	}
+
 
 
 ?>

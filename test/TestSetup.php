@@ -32,6 +32,7 @@ define('DATABASE_HOST', 'localhost');
 	  'database' => MYSQL_DATABASE,
 	  'username' => 'root',
 	  'password' => '',
+		'file' => dirname(__FILE__) . '/test.db',
 		'adapter' => 'mysql'
 	));
 

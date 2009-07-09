@@ -7,7 +7,7 @@ require_once(dirname(__FILE__) . '/../../active_php/adapters/mysql_adapter.php')
 	
 	
 		public function setUp() {
-			ActivePhp\Base::$adapter = new ActivePhp\MysqlAdapter(array('test_mode' => true));
+			ActivePhp\Base::$adapter = new ActivePhp\MysqlAdapter(array('host' => 'localhost', 'username' => 'root', 'password' =>'', 'database' => 'active_php_test'));
 			$this->adapter = ActivePhp\Base::$adapter;
 			ActivePhp\Base::$class = 'Test';
 		}

@@ -122,7 +122,7 @@ abstract class AbstractAdapter {
 	
 	
 abstract class QueryResult {
-		
+		var $failed = false;
 		public function __construct($object) {
 			if($object === false) {
 				$this->failed = true;

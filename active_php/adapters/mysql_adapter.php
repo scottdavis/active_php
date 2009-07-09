@@ -6,9 +6,11 @@ require_once(dirname(__FILE__) . '/abstract_adapter.php');
 
 	class MysqlAdapter extends AbstractAdapter {
 		
-		public function connect($db_settings_name) {
-			$this->options = $db_settings_name;
-			$this->connection = mysql_connect($db_settings_name['host'], $db_settings_name['username'], $db_settings_name['password']) or die();
+		public function connect($db_settings_name = array()) {
+			if(!empty($db_settings_name)) {
+				$this->options = $db_settings_name;
+			}
+			$this->connection = mysql_connect($this->options['host'], $this->options['username'], $this->options['password']) or die();
 			mysql_select_db($this->options['database'], $this->connection);
 			return $this->connection;
 		}
@@ -21,7 +23,7 @@ require_once(dirname(__FILE__) . '/abstract_adapter.php');
 		
 		public function reset() {
 			$this->close();
-			$conn = $this->connect($this->options);
+			$conn = $this->connect();
 			Base::set_connection($conn);
 		}
 		

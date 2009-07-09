@@ -4,6 +4,16 @@ namespace ActivePhp;
 
 	class Column {
 		
+		var $null;
+		var $name;
+		var $sql_type;
+		var $sql_types;
+		var $options;
+		var $limit;
+		var $precision;
+		var $scale;
+		var $native_types;
+		
 		public function __construct($name, $sql_type, $options = array()) {
 			$this->adapter = Base::adapter();
 			$adapter_name = 'ActivePhp\\' . $this->adapter->adapter_name() . 'Adapter';

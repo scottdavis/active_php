@@ -124,12 +124,12 @@ class Base {
 		if(is_array($input)) {
 		$clean_values = array();
 		foreach($input as $value) {
-			array_push($clean_values, mysql_real_escape_string($value));
+			array_push($clean_values, static::$adapter->escape($value));
 		}
 		return $clean_values;
 		}else{
 		//if its an int make it a string
-			return mysql_real_escape_string((string) $input);
+			return static::$adapter->escape((string) $input);
 		}
 	}
 	
@@ -732,7 +732,7 @@ class Base {
 	private static function build_where_from_array($conditions){
 		$sql = 'WHERE(';
 		foreach($conditions as $condition => $value){
-			$sql .= self::table_name() . '.' . $condition. " = '" . mysql_real_escape_string($value) ."'";
+			$sql .= self::table_name() . '.' . $condition. " = '" . static::$adapter->escape($value) ."'";
 		}
 		$sql .= ')';
 		return $sql;
@@ -961,7 +961,7 @@ class Base {
 
 	protected function association_has_many_find($association_name) {
 		$primary_key_field = static::primary_key_field();
-		$primary_key_value = mysql_real_escape_string($this->row[$primary_key_field]);
+		$primary_key_value = static::$adapter->escape($this->row[$primary_key_field]);
 		$conditions = $this->association_table_name($association_name) . '.' . $this->association_foreign_key($association_name) . ' = ' . $primary_key_value;
 		$association_model = $this->association_model($association_name);
 		$find_array = call_user_func("$association_model::find_all", 
@@ -982,7 +982,7 @@ class Base {
 	}
 
 	protected function association_belongs_to_find($association_name) {
-		$primary_key_value = mysql_real_escape_string($this->row[$association_name . '_id']);
+		$primary_key_value = static::$adapter->escape($this->row[$association_name . '_id']);
 		$association_model = $this->association_model($association_name);
 		return call_user_func("$association_model::find", $primary_key_value);
 	}

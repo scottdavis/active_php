@@ -6,11 +6,27 @@ require_once(dirname(__FILE__) . '/abstract_adapter.php');
 
 	class MysqlAdapter extends AbstractAdapter {
 		
+		public static $NATIVE_DATABASE_TYPES = array(
+        	'primary_key' => array('name' => NULL, 'sql' => "int(11) DEFAULT NULL auto_increment PRIMARY KEY"),
+        	'string'      => array('name' => "varchar", 'limit' => 255),
+        	'text'        => array('name' => "text"),
+        	'integer'     => array('name' => "int", 'limit' => 11),
+        	'float'       => array('name' => "decimal"),
+        	'decimal'     => array('name' => "decimal"),
+       	 	'datetime'    => array('name' => "datetime"),
+        	'timestamp'   => array('name' => "datetime"),
+        	'time'        => array('name' => "time"),
+        	'date'        => array('name' => "date"),
+        	'binary'      => array('name' => "blob"),
+        	'boolean'     => array('name' => "tinyint", 'limit' => 1 )
+			);
+		
 		public function connect($db_settings_name = array()) {
 			if(!empty($db_settings_name)) {
 				$this->options = $db_settings_name;
 			}
-			$this->connection = mysql_connect($this->options['host'], $this->options['username'], $this->options['password']) or die();
+			if(empty($this->options)) {throw new \Exception("You Must provide database information in order to connect");}
+			$this->connection = mysql_connect($this->options['host'], $this->options['username'], $this->options['password'], true);
 			mysql_select_db($this->options['database'], $this->connection);
 			return $this->connection;
 		}
@@ -39,21 +55,9 @@ require_once(dirname(__FILE__) . '/abstract_adapter.php');
 			return mysql_insert_id($this->connection);
 		}
 		
-		
-		public static $NATIVE_DATABASE_TYPES = array(
-        	'primary_key' => array('name' => NULL, 'sql' => "int(11) DEFAULT NULL auto_increment PRIMARY KEY"),
-        	'string'      => array('name' => "varchar", 'limit' => 255),
-        	'text'        => array('name' => "text"),
-        	'integer'     => array('name' => "int", 'limit' => 11),
-        	'float'       => array('name' => "decimal"),
-        	'decimal'     => array('name' => "decimal"),
-       	 	'datetime'    => array('name' => "datetime"),
-        	'timestamp'   => array('name' => "datetime"),
-        	'time'        => array('name' => "time"),
-        	'date'        => array('name' => "date"),
-        	'binary'      => array('name' => "blob"),
-        	'boolean'     => array('name' => "tinyint", 'limit' => 1 )
-			);
+		public function escape($value) {
+			return mysql_real_escape_string($value);
+		}
 		
 		public function adapter_name() {return 'Mysql';}
 		
@@ -62,7 +66,7 @@ require_once(dirname(__FILE__) . '/abstract_adapter.php');
       	}
  
  		public function quote_table_name($name) {
-        return preg_replace('/\./', '`.`', self::quote_column_name($name));
+        return preg_replace('/\./', '`.`', $this->quote_column_name($name));
 		}
 		
 		public function type_to_sql($type, $limit = NULL, $precision = NULL, $scale = NULL) {

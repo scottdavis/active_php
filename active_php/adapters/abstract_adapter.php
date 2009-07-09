@@ -34,6 +34,8 @@ abstract class AbstractAdapter {
 		
 		public function insert_id() {}
 		
+		public function escape($value) {return $value;}
+		
 		public function adapter_name() {return 'Abstract';}
 		
 		public function supports_migrations() {return false;}

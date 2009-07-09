@@ -4,7 +4,6 @@ namespace ActivePhp;
 
 	class Column {
 		
-		var $null;
 		var $name;
 		var $sql_type;
 		var $sql_types;
@@ -19,7 +18,6 @@ namespace ActivePhp;
 			$adapter_name = 'ActivePhp\\' . $this->adapter->adapter_name() . 'Adapter';
 			$this->name = $name;
 			$this->sql_type = $sql_type;
-			$this->null = $null;
 			$this->options = $options;
 			
 			foreach(array('limit', 'precision', 'scale') as $arg) {

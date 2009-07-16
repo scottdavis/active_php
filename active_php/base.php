@@ -274,7 +274,7 @@ class Base {
       $where = ' WHERE (id = ' . $clean . ')';
     }
     $sql = 'DELETE FROM ' . self::table_name() . $where;
-    return self::execute_insert_query($sql);
+    return self::execute($sql);
   }
   
   public function destroy() {
@@ -283,12 +283,12 @@ class Base {
 	
 	public static function delete_all() {
 		$sql = 'DELETE FROM ' . self::table_name() . ';';
-		return self::execute_insert_query($sql);
+		return self::execute($sql);
 	}
 	
 	public static function truncate() {
 		$sql = 'TRUNCATE ' . self::table_name() . ';';
-		return self::execute_insert_query($sql);
+		return self::execute($sql);
 	}
 	
 	
@@ -811,7 +811,7 @@ class Base {
 	
 	public function __get($var) {
 		if(isset($this->row[$var])) {
-			return $this->row[$var];
+			return stripslashes($this->row[$var]);
 		} elseif(is_null($this->row[$var]) && in_array($var, static::columns())){
 			return null;
 		}elseif($this->association_has_many_exists($var)) {
@@ -827,7 +827,8 @@ class Base {
 	
 	
 	public function __set($var, $value) {
-		if(in_array($var, static::columns())) {
+		$columns = array_flip(static::columns());
+		if(isset($columns[$var])) {
 			$this->row[$var] = $value;
 		}else{
 			throw new \Exception("Can not set property it does not exsit.");

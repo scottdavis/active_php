@@ -111,7 +111,7 @@
 		}
 		
 		
-		private static function quote_column_names($columns) {
+		public static function quote_column_names($columns) {
 			(array) $out = array();
 			foreach($columns as $column){
 				array_push($out, Migration::quote_column_name($column));
@@ -119,7 +119,7 @@
 			return $out;
 		}
 		
-		private static function index_name($table_name, $columns) {
+		public static function index_name($table_name, $columns) {
 			return "index_" . $table_name . "_on_" . join("_and_", $columns);
 		}
 		

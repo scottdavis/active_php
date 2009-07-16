@@ -8,8 +8,7 @@ require_once(dirname(__FILE__) . '/TestMigration.php');
 require_once(dirname(__FILE__) . '/model/user.php');
 require_once(dirname(__FILE__) . '/model/photo.php');
 require_once(dirname(__FILE__) . '/TestData.php');
-define('MYSQL_DATABASE', 'active_php_test');
-define('DATABASE_HOST', 'localhost');
+
 
 
 	/**
@@ -27,14 +26,7 @@ define('DATABASE_HOST', 'localhost');
 	}
 
 
-	ActivePhp\Base::establish_connection(array(
-	  'host' => DATABASE_HOST,
-	  'database' => MYSQL_DATABASE,
-	  'username' => 'root',
-	  'password' => '',
-		'file' => dirname(__FILE__) . '/test.db',
-		'adapter' => 'mysql'
-	));
+	require_once(dirname(__FILE_) . '/config/db_connect.php');
 
 	//load the test database
 	if(!defined('DATABASE_CREATED')) {

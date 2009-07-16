@@ -12,8 +12,8 @@ require_once(dirname(__FILE__) . '/abstract_adapter.php');
 		}
 		
 		private static function is_exec($sql) {
-			foreach(array('insert', 'update', 'delete') as $t) {
-				if(preg_match("/^$t/", strtolower($sql))) {
+			foreach(array('insert', 'update', 'delete', 'alter') as $t) {
+				if(preg_match("/^$t/", strtolower(trim($sql)))) {
 					return true;
 				}
 			}

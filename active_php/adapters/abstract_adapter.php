@@ -119,6 +119,18 @@ abstract class AbstractAdapter {
 			return $sql;
 		}
 		
+		public function table_exists($table) {
+			$result = $this->query('SHOW TABLES');
+			while($row = $result->fetch_assoc()) {
+				$keys = array_keys($row);
+				$_table = $row[$keys[0]];
+				if($_table === $table) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
 		
 	}
 	

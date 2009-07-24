@@ -61,10 +61,16 @@
 			$this->add_column($name, $type, $options);
 		}
 		
-		public function change_column($column, $type, $options = array()) {
+		public function change($column, $options = array()) {
 			//MODIFY [column] column options
+			if(isset($options['type']) && !empty($options['type'])) {
+				$type = $options['type'];
+			}else{
+				$type = \ActivePhp\Base::select_one("SHOW COLUMNS FROM " . $this->quoted_table_name . " LIKE '{$column}'");
+				$type = $type["Type"];
+			}
 			$sql = $this->alter_table_sql() . 'MODIFY COLUMN ' . Migration::quote_column_name($column) . ' ' . Migration::type_to_sql($type, $options['limit'], $options['precision'], $options['scale']);
-			$sql = Migration::add_column_options($sql, $options);
+			$sql = Migration::add_column_options($sql, $options, true);
 			array_push($this->columns, $sql);
 		}
 		

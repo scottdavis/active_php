@@ -4,6 +4,8 @@
 	require_once(dirname(__FILE__) . '/../base.php');
 	class Migration {
 	
+		static $show_sql = true;
+	
 		public function create_database($database_name, $charset = 'utf8') {
 			return $this->execute("CREATE DATABASE `" . $database_name . "` DEFAULT CHARACTER SET `" . $charset . "`");
 		}
@@ -48,7 +50,9 @@
 		
 		
 		public function execute($sql) {
-			echo $sql . "\n\n";
+			if(static::$show_sql) {
+				echo $sql . "\n\n";
+			}
 			$query = ActivePhp\Base::execute($sql, true);
 			return $query;
 		}
@@ -108,9 +112,10 @@
 			}
 		}
 		
-		public static function add_column_options($sql, $options = array()) {
+		public static function add_column_options($sql, $options = array(), $alter = false) {
 			$sql .= isset($options['default']) ? ' DEFAULT ' . $options['default'] : '';
 			$sql .= (isset($options['null']) && !$options['null']) ? ' NOT NULL' : '';
+			$sql .= ($alter && isset($options['null']) && $options['null']) ? ' NULL' : '';
 			return $sql;
 		}
 		
@@ -143,6 +148,9 @@
 			}
 			throw new Exception("No Column Found");
 		}
+		
+		public function up() {}
+		public function down() {}
 		
 		
 	}

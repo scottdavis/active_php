@@ -28,8 +28,8 @@ require_once(dirname(__FILE__) . '/../../active_php/migrations/migration.php');
 		}
 		
 		public function testChangeColumn() {
-			$this->table->change_column('name', 'integer', array('null' => false));
-			$this->assertEquals("ALTER TABLE `users` MODIFY COLUMN `name` int(11) NOT NULL", $this->table->columns[0]);
+			$this->table->change('name', array('null' => false));
+			$this->assertEquals("ALTER TABLE `users` MODIFY COLUMN `name` varchar(255) NOT NULL", $this->table->columns[0]);
 		}
 		
 		

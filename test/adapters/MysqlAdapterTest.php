@@ -76,6 +76,14 @@ require_once(dirname(__FILE__) . '/../../active_php/adapters/mysql_adapter.php')
 			$this->assertEquals('`test`', $this->adapter->quote_column_name('test'));
 		}
 		
+		public function testTableExistsFail() {
+			$this->assertFalse($this->adapter->table_exists('test'));
+		}
+		
+		public function testTableExists() {
+			$this->assertTrue($this->adapter->table_exists('users'));
+		}
+		
 
 		
 		

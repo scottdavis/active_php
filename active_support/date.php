@@ -4,7 +4,7 @@ namespace ActiveSupport;
 class DateHelper {
 	
 	public static $formats = array(
-			'db' => 'Y-m-d G:i:s',
+			'db' => 'Y-m-d H:i:s',
 			'standard' => 'm/d/y',
 			'full' => 'F j, Y, g:i a',
 			'rfc822' => 'd M Y'
@@ -14,7 +14,7 @@ class DateHelper {
 	public static function to_string($format, $timestamp) 
 	{
 		
-		 $formats = self::$formats;
+		 $formats = static::$formats;
 			if(!empty($format[$formats]) && !isset($formats[$format])){
 				throw new \Exception('Invaild Date output format');
 			}

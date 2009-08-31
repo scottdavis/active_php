@@ -43,7 +43,7 @@
 		}
 		
 		
-		public function migrate($target_version = null) {
+		public static function migrate($target_version = null) {
 			if(is_null($target_version)) {
 				self::up($target_version);
 			}elseif((int) self::current_version() > (int) $target_version) {
@@ -59,13 +59,13 @@
 			}
 		}
 		
-		public function up($to_version = NULL) {
+		public static function up($to_version = NULL) {
 			self::drop_migration_table();
 			self::setup_table();
 			$table = self::migration_table_name();
 			$data = self::load_files(self::$dir);
 			foreach($data as $version => $class) {
-				if(!is_null($to_version) && (int) $version > (int) $to_version) {continue;}
+				if((!is_null($to_version) &&  !empty($to_version)) && (int) $version > (int) $to_version) {continue;}
 				$klass = new $class();
 				$klass->up();
 				self::create_version($version);
@@ -102,7 +102,7 @@
 	
 	public static function load_files() {
 		$dir = self::$dir;
-		$curent_version = self::current_version();
+		$current_version = self::current_version();
 		$classes = array();
 		if ($dh = opendir($dir)) {
 			while (($file = readdir($dh)) !== false) {

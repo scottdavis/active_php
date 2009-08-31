@@ -26,7 +26,7 @@ require_once(dirname(__FILE__) . '/TestData.php');
 	}
 
 
-	require_once(dirname(__FILE_) . '/config/db_connect.php');
+	require_once(dirname(__FILE__) . '/config/db_connect.php');
 
 	//load the test database
 	if(!defined('DATABASE_CREATED')) {

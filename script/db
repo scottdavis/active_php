@@ -1,9 +1,42 @@
 <?php
+	define('NIMBLE_ENV', array_pop($argv));
 
-	MigrationRunner::$dir = {dir};
+	$_SESSION = array();
+	require_once('nimble/lib/support/file_utils.php');
+	require_once('nimble/lib/support/inflector.php');
+	require_once('active_php/active_php/migrations/migration.php');
+	require_once('active_php/active_php/migrations/lib/migration_runner.php');
+	require_once(FileUtils::join(dirname(__FILE__), '..', 'config', 'config.php'));
+	MigrationRunner::$dir = FileUtils::join(dirname(__file__), '..', 'db', 'migrations');
+	
+	switch($argv[1]) {
+		case 'migrate':
+			MigrationRunner::migrate($argv[2]);
+		break;
+		case 'create':
+			create();
+		break;
+		case 'drop':
+			drop();
+		break;
+		case 'reload':
+			drop();
+			create();
+			MigrationRunner::migrate($argv[2]);
+		break;
+	}
 	
 	
+	function create() {
+		global $db_config;
+		$m = new Migration();
+		$m->create_database($db_config[2]['database']);
+	}
 	
-
+	function drop() {
+		global $db_config;
+		$m = new Migration();
+		$m->drop_database($db_config[2]['database']);
+	}
 
 ?>

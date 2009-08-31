@@ -63,6 +63,9 @@
 		
 		public function change($column, $options = array()) {
 			//MODIFY [column] column options
+			foreach(array('limit', 'precision', 'scale') as $key) {
+				$options[$key] = isset($options[$key]) ? $options[$key] : '';
+			}
 			if(isset($options['type']) && !empty($options['type'])) {
 				$type = $options['type'];
 			}else{

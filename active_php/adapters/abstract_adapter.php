@@ -26,7 +26,7 @@ abstract class AbstractAdapter {
 			
 		}
 		
-		public function connect() {return false;}
+		public function connect($options) {return false;}
 		
 		public function close() {}
 		
@@ -79,9 +79,9 @@ abstract class AbstractAdapter {
 			$this->logger->add_message(sprintf("[%s] %s ", $name, $sql));
 		}
 		
-		public function type_to_sql() {}
+		public function type_to_sql($type, $limit, $precision, $scale ) {}
 		
-		public function add_column_options() {}
+		public function add_column_options($sql, $options) {}
 		
 		public function build_conditions() {}
 		

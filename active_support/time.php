@@ -28,7 +28,7 @@ class Time {
 		return time();
 	}
 	
-	public static function time() {
+	public static function current_time() {
 		return static::get_current_time(); 
 	}
 	

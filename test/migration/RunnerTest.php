@@ -14,6 +14,7 @@ class RunnerTest extends PHPUnit_Framework_TestCase {
 	
 	public function setUp() {
 		MigrationRunner::$dir = dirname(__FILE__) . '/test';
+		MigrationRunner::create_migration_table();
 	}
 	
 	public function testMigrationTable() {
@@ -26,6 +27,20 @@ class RunnerTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(123456788, MigrationRunner::current_version());
 	}
 	
+	public function testMigrate() {
+			MigrationRunner::migrate();
+			$this->assertEquals(MigrationRunner::current_version(), 123456789);
+	}
+	
+	public function testMigrateEmptyString() {
+		MigrationRunner::migrate('');
+		$this->assertEquals(MigrationRunner::current_version(), 123456789);
+	}
+	
+	public function testMigrateZero() {
+		MigrationRunner::migrate();
+		$this->assertEquals(MigrationRunner::current_version(), 123456789);
+	}
 	
 	public function testLoadFiles() {
 		$data = MigrationRunner::load_files();
@@ -60,6 +75,9 @@ class RunnerTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals(123456789, $max);
 	}
 	
+	public function tearDown() {
+		MigrationRunner::drop_migration_table();
+	}
 	
 }
 
